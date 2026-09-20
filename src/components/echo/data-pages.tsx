@@ -1,18 +1,662 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis } from "recharts";
-import { Copy, File, Folder, Grid2X2, List, MessageCircle, MoreHorizontal, Paperclip, Plus, Search, Send, UploadCloud } from "lucide-react";
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  Folder,
+  Grid2X2,
+  List,
+  MessageCircle,
+  MoreHorizontal,
+  Paperclip,
+  Search,
+  Send,
+  UploadCloud,
+} from "lucide-react";
 import { AppShell } from "./app-shell";
-import { Field, GlassCard, inputClass, PageHeader } from "./primitives";
+import { DataRow, Eyebrow, KpiBand, Modal, PageHeader, SelectField, TextField } from "./primitives";
 import { Button } from "@/components/ui/button";
 import { advances, bills, employees, metrics } from "@/lib/echo-data";
+import { cn } from "@/lib/utils";
 
-export function AdvancesPage() { const [open, setOpen] = useState(false); return <AppShell><PageHeader title="Employee Advances" eyebrow="Finance" action={<Button onClick={() => setOpen(true)}><Plus className="size-4"/>New Advance</Button>}/><GlassCard className="overflow-hidden p-0"><div className="overflow-x-auto"><table className="w-full min-w-[700px] text-left"><thead className="border-b border-border text-xs uppercase text-muted-foreground"><tr>{["Employee","ID","Amount","Date","Time"].map(x => <th key={x} className="p-4 font-semibold">{x}</th>)}</tr></thead><tbody>{advances.map(row => <tr key={row.id} className="border-b border-border/70 hover:bg-accent"><td className="p-4"><Link to="/employees/$employeeId" params={{ employeeId: row.id }} className="font-semibold">{row.employee}</Link></td><td className="p-4 text-muted-foreground">{row.id}</td><td className="p-4 font-semibold">{row.amount}</td><td className="p-4 text-muted-foreground">{row.date}</td><td className="p-4 text-muted-foreground">{row.time}</td></tr>)}</tbody></table></div></GlassCard>{open && <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/15 p-4 backdrop-blur-md"><form className="glass-strong w-full max-w-md rounded-[1.5rem] p-6" onSubmit={e => { e.preventDefault(); setOpen(false); }}><h2 className="text-xl font-semibold">New advance</h2><div className="mt-5 grid gap-4"><Field label="Employee"><select className={inputClass} required><option value="">Select employee</option>{employees.map(e => <option key={e.id}>{e.name}</option>)}</select></Field><Field label="Amount"><input className={inputClass} type="number" min="1" required/></Field><Field label="Date"><input className={inputClass} type="date" required/></Field></div><div className="mt-5 flex justify-end gap-2"><Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button><Button>Save advance</Button></div></form></div>}</AppShell>; }
-export function EmployeeProfilePage({ employeeId }: { employeeId: string }) { const employee = employees.find(e => e.id === employeeId) ?? employees[0]; if (!employee) return null; return <AppShell><PageHeader title={employee.name} eyebrow="Employee profile"/><div className="grid gap-5 lg:grid-cols-[.7fr_1.3fr]"><GlassCard><div className="grid size-24 place-items-center rounded-[1.5rem] bg-primary/10 text-3xl font-bold text-primary">{employee.name.split(" ").map(x => x[0]).join("")}</div><h2 className="mt-5 text-2xl font-semibold">{employee.name}</h2><p className="text-muted-foreground">{employee.role}</p><div className="mt-6 grid grid-cols-2 gap-3">{[["Employee ID",employee.id],["Department",employee.department],["Years worked",`${employee.years} years`],["Salary",employee.salary],["Rating",`${employee.rating} / 5`],["Leave used",`${employee.leave} days`]].map(([k,v]) => <div key={k} className="rounded-xl bg-muted p-3"><small className="text-muted-foreground">{k}</small><strong className="mt-1 block text-sm">{v}</strong></div>)}</div></GlassCard><GlassCard><h2 className="text-lg font-semibold">Advance history</h2><div className="mt-5 grid gap-2">{advances.filter(a => a.id === employee.id).map(a => <div key={a.date} className="flex items-center justify-between rounded-xl border border-border p-4"><div><strong>{a.amount}</strong><p className="text-xs text-muted-foreground">{a.date} · {a.time}</p></div><span className="rounded-lg bg-success/10 px-2 py-1 text-xs text-success">Approved</span></div>)}</div></GlassCard></div></AppShell>; }
-const chartData = [{m:"Apr",tasks:68,clients:22},{m:"May",tasks:75,clients:27},{m:"Jun",tasks:72,clients:29},{m:"Jul",tasks:86,clients:34},{m:"Aug",tasks:91,clients:38},{m:"Sep",tasks:96,clients:42}];
-export function AnalyticsPage() { return <AppShell><PageHeader title="Overall Company Data" eyebrow="Executive view"/><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">{metrics.map(([label,value,note]) => <GlassCard key={label} className="p-4"><p className="text-xs text-muted-foreground">{label}</p><strong className="mt-2 block text-2xl">{value}</strong><small className="mt-1 block text-success">{note}</small></GlassCard>)}</div><div className="mt-5 grid gap-5 lg:grid-cols-2"><GlassCard><h2 className="font-semibold">Task completion</h2><div className="mt-5 h-64"><ResponsiveContainer width="100%" height="100%"><AreaChart data={chartData}><defs><linearGradient id="echoArea" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="var(--primary)" stopOpacity={.35}/><stop offset="95%" stopColor="var(--primary)" stopOpacity={0}/></linearGradient></defs><CartesianGrid vertical={false} stroke="var(--border)"/><XAxis dataKey="m" axisLine={false} tickLine={false}/><Tooltip/><Area type="monotone" dataKey="tasks" stroke="var(--primary)" fill="url(#echoArea)" strokeWidth={3}/></AreaChart></ResponsiveContainer></div></GlassCard><GlassCard><h2 className="font-semibold">Client growth</h2><div className="mt-5 h-64"><ResponsiveContainer width="100%" height="100%"><BarChart data={chartData}><CartesianGrid vertical={false} stroke="var(--border)"/><XAxis dataKey="m" axisLine={false} tickLine={false}/><Tooltip/><Bar dataKey="clients" fill="var(--primary)" radius={[8,8,2,2]}/></BarChart></ResponsiveContainer></div></GlassCard></div><GlassCard className="mt-5"><h2 className="font-semibold">Recent activity</h2><div className="mt-4 grid gap-3">{["Maya approved invoice INV-2048","Arjun completed Aster Labs inspection","Sara added Nova Retail to client workspace","Dev uploaded before and after evidence"].map((x,i) => <div key={x} className="flex gap-3 border-b border-border pb-3 text-sm"><span className="mt-1 size-2 rounded-full bg-primary"/><span>{x}<small className="block text-muted-foreground">{i + 1} hour{i ? "s" : ""} ago</small></span></div>)}</div></GlassCard></AppShell>; }
-export function VaultPage() { const [view,setView] = useState<"grid"|"list">("grid"); const [path,setPath] = useState(["Personal Vault"]); const items = [{name:"FY26 Contracts",folder:true},{name:"Employee Records",folder:true},{name:"Aster Invoice.pdf",folder:false},{name:"Site Photo.jpg",folder:false},{name:"Payroll Sep.xlsx",folder:false}]; return <AppShell><PageHeader title="Personal Vault" eyebrow="Private storage" action={<div className="flex gap-2"><Button variant="secondary"><UploadCloud className="size-4"/>Upload</Button><Button><Plus className="size-4"/>New Folder</Button></div>}/><GlassCard><div className="mb-5 flex flex-wrap items-center justify-between gap-3"><div className="flex items-center gap-2 text-sm">{path.map((p,i) => <button key={p} onClick={() => setPath(path.slice(0,i+1))} className="text-muted-foreground hover:text-foreground">{i ? "/ " : ""}{p}</button>)}</div><div className="flex rounded-lg bg-muted p-1"><Button variant={view === "grid" ? "secondary" : "ghost"} size="icon" onClick={() => setView("grid")}><Grid2X2 className="size-4"/></Button><Button variant={view === "list" ? "secondary" : "ghost"} size="icon" onClick={() => setView("list")}><List className="size-4"/></Button></div></div><div className={view === "grid" ? "grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-5" : "grid gap-2"}>{items.map(item => <button key={item.name} onDoubleClick={() => item.folder && setPath([...path,item.name])} className={`group border border-border bg-background/40 text-left hover:bg-accent ${view === "grid" ? "rounded-xl p-4" : "flex items-center gap-3 rounded-lg p-3"}`}>{item.folder ? <Folder className="size-9 fill-primary/20 text-primary"/> : <File className="size-9 text-muted-foreground"/>}<span className={`${view === "grid" ? "mt-4 block" : ""} text-sm font-medium`}>{item.name}</span><MoreHorizontal className="ml-auto size-4 text-muted-foreground opacity-0 group-hover:opacity-100"/></button>)}</div><label className="mt-6 grid min-h-32 cursor-pointer place-items-center rounded-xl border border-dashed border-input text-center text-sm text-muted-foreground"><span><UploadCloud className="mx-auto mb-2 size-5"/>Drag and drop anything here</span><input type="file" multiple className="hidden"/></label></GlassCard></AppShell>; }
-export function BillBookPage() { const [tab,setTab]=useState("All"); return <AppShell><PageHeader title="Bill Book" eyebrow="Finance workspace" action={<Button><Plus className="size-4"/>New document</Button>}/><div className="mb-5 grid gap-3 sm:grid-cols-3">{[["Paid","₹8.42L"],["Pending","₹3.18L"],["Draft","₹74K"]].map(x => <GlassCard key={x[0]}><p className="text-sm text-muted-foreground">{x[0]}</p><strong className="mt-2 block text-3xl">{x[1]}</strong></GlassCard>)}</div><GlassCard><div className="mb-5 flex gap-2">{["All","Quotations","Invoices","Bills"].map(x => <button key={x} onClick={() => setTab(x)} className={`rounded-lg px-3 py-2 text-sm ${tab===x?"bg-primary text-primary-foreground":"text-muted-foreground hover:bg-accent"}`}>{x}</button>)}</div><div className="grid gap-2">{bills.filter(b => tab === "All" || `${b.type}s` === tab).map(b => <div key={b.id} className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-xl border border-border p-4 md:grid-cols-4"><div><strong>{b.id}</strong><small className="block text-muted-foreground md:hidden">{b.client}</small></div><span className="hidden text-sm text-muted-foreground md:block">{b.client}</span><span className="hidden text-sm md:block">{b.type}</span><div className="text-right"><strong>{b.amount}</strong><small className="ml-3 rounded-lg bg-muted px-2 py-1">{b.status}</small></div></div>)}</div></GlassCard></AppShell>; }
-export function ChatsPage() { const groups = ["Aster Labs","Nova Retail","Meridian House","Arc Systems"]; const [active,setActive]=useState(groups[0] ?? ""); const [query,setQuery]=useState(""); const [message,setMessage]=useState(""); const [sent,setSent]=useState<string[]>([]); return <AppShell><PageHeader title="Group Chats" eyebrow="Client communication"/><div className="glass grid min-h-[650px] overflow-hidden rounded-[1.5rem] md:grid-cols-[280px_1fr]"><aside className="border-b border-border p-4 md:border-b-0 md:border-r"><div className="relative"><Search className="absolute left-3 top-3 size-4 text-muted-foreground"/><input className={`${inputClass} pl-9`} placeholder="Search chats" value={query} onChange={e=>setQuery(e.target.value)}/></div><div className="mt-4 grid gap-1">{groups.filter(g=>g.toLowerCase().includes(query.toLowerCase())).map((g,i)=><button key={g} onClick={()=>setActive(g)} className={`flex items-center gap-3 rounded-xl p-3 text-left ${active===g?"bg-primary text-primary-foreground":"hover:bg-accent"}`}><span className="relative grid size-9 place-items-center rounded-xl bg-background/30 font-semibold">{g[0]}<i className="absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full border-2 border-background bg-success"/></span><span><strong className="text-sm">{g}</strong><small className="block opacity-60">Active now</small></span></button>)}</div></aside><section className="flex min-h-[500px] flex-col"><div className="border-b border-border p-4"><strong>{active}</strong><p className="text-xs text-muted-foreground">8 members · 3 online</p></div><div className="flex-1 space-y-4 p-5"><div className="max-w-md rounded-2xl rounded-bl-md bg-muted p-3 text-sm">The service team has reached the site. We’ll share photos shortly.<small className="mt-1 block text-muted-foreground">Sara · 4:16 PM</small></div><div className="ml-auto max-w-md rounded-2xl rounded-br-md bg-primary p-3 text-sm text-primary-foreground">Thank you. Please also attach the signed checklist.<small className="mt-1 block opacity-60">You · 4:18 PM</small></div>{sent.map((x,i)=><div key={i} className="ml-auto max-w-md rounded-2xl rounded-br-md bg-primary p-3 text-sm text-primary-foreground">{x}</div>)}</div><form onSubmit={e=>{e.preventDefault();if(message.trim()){setSent([...sent,message]);setMessage("")}}} className="flex gap-2 border-t border-border p-4"><Button type="button" variant="ghost" size="icon"><Paperclip className="size-4"/></Button><input className={inputClass} value={message} onChange={e=>setMessage(e.target.value)} placeholder="Message the group…"/><Button size="icon"><Send className="size-4"/></Button></form></section></div></AppShell>; }
-export function SettingsPage() { const [dark,setDark]=useState(false); return <AppShell><PageHeader title="Profile Settings" eyebrow="Your account"/><div className="grid gap-5 lg:grid-cols-[.65fr_1.35fr]"><GlassCard><div className="grid size-24 place-items-center rounded-[1.5rem] bg-primary text-2xl font-bold text-primary-foreground">LK</div><h2 className="mt-5 text-xl font-semibold">Linkesh Kumar</h2><p className="text-sm text-muted-foreground">ECHO Administrator</p><Button variant="secondary" className="mt-5">Change photo</Button></GlassCard><div className="grid gap-5"><GlassCard><h2 className="font-semibold">Personal details</h2><div className="mt-5 grid gap-4 md:grid-cols-2"><Field label="Name"><input className={inputClass} defaultValue="Linkesh Kumar"/></Field><Field label="Email"><input className={inputClass} type="email" defaultValue="linkesh@echo.in"/></Field><Field label="Phone"><input className={inputClass} defaultValue="+91 98765 43210"/></Field><Field label="New password"><input className={inputClass} type="password" placeholder="••••••••"/></Field></div><Button className="mt-5">Save changes</Button></GlassCard><GlassCard><h2 className="font-semibold">Appearance</h2><button onClick={()=>{setDark(!dark);document.documentElement.classList.toggle("dark",!dark);window.localStorage.setItem("echo-theme",!dark?"dark":"light")}} className="mt-4 flex w-full items-center justify-between rounded-xl border border-border p-4"><span><strong className="block text-sm">Theme</strong><small className="text-muted-foreground">Use {dark ? "dark" : "light"} appearance</small></span><span className={`relative h-7 w-12 rounded-full transition ${dark?"bg-primary":"bg-muted"}`}><i className={`absolute top-1 size-5 rounded-full bg-primary-foreground shadow transition ${dark?"left-6":"left-1"}`}/></span></button></GlassCard></div></div></AppShell>; }
-export function HelpPage() { const [copied,setCopied]=useState(""); const contacts: Array<[string,string,string]> = [["Website","xelevate.in","https://xelevate.in"],["Email","linkesh@xelevate.in","mailto:linkesh@xelevate.in"],["Phone","+91 9791062642","tel:+919791062642"]]; return <AppShell><PageHeader title="How can we help?" eyebrow="Xelevate support"/><div className="mx-auto max-w-4xl"><GlassCard className="mb-5 p-7 md:p-10"><MessageCircle className="size-9 text-primary"/><h2 className="mt-5 text-2xl font-semibold">Support for your ECHO workspace.</h2><p className="mt-2 max-w-xl text-muted-foreground">Reach the Xelevate team for product guidance, technical support, or account assistance.</p></GlassCard><div className="grid gap-4 md:grid-cols-3">{contacts.map(([label,value,href])=><GlassCard key={label}><p className="text-xs uppercase text-muted-foreground">{label}</p><a href={href} className="mt-3 block break-all font-semibold text-primary">{value}</a><Button variant="secondary" size="sm" className="mt-5" onClick={()=>{navigator.clipboard.writeText(value);setCopied(label)}}><Copy className="size-3.5"/>{copied===label?"Copied":"Copy"}</Button></GlassCard>)}</div><p className="mt-8 text-center text-sm text-muted-foreground">Powered by Xelevate</p></div></AppShell>; }
+/* ---------------- Advances ---------------- */
+export function AdvancesPage() {
+  const [open, setOpen] = useState(false);
+  return (
+    <AppShell>
+      <PageHeader
+        title="Employee Advances"
+        eyebrow="Finance"
+        action={<Button onClick={() => setOpen(true)}>New Advance</Button>}
+      />
+
+      <div className="hidden grid-cols-[1fr_120px_140px_140px_120px] gap-8 border-b border-border py-3 md:grid">
+        <span className="eyebrow">Employee</span>
+        <span className="eyebrow">ID</span>
+        <span className="eyebrow">Amount</span>
+        <span className="eyebrow">Date</span>
+        <span className="eyebrow text-right">Time</span>
+      </div>
+      <div>
+        {advances.map((row) => (
+          <div
+            key={row.id}
+            className="hairline-b grid gap-2 py-5 transition-opacity duration-500 hover:opacity-70 md:grid-cols-[1fr_120px_140px_140px_120px] md:items-center md:gap-8"
+          >
+            <Link
+              to="/employees/$employeeId"
+              params={{ employeeId: row.id }}
+              className="text-[15px] text-foreground"
+            >
+              {row.employee}
+            </Link>
+            <span className="text-sm text-muted-foreground">{row.id}</span>
+            <span className="text-[15px] text-foreground">{row.amount}</span>
+            <span className="text-sm text-muted-foreground">{row.date}</span>
+            <span className="text-sm tabular-nums text-muted-foreground md:text-right">
+              {row.time}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <Modal open={open} onClose={() => setOpen(false)} title="New advance" eyebrow="Finance">
+        <div className="grid gap-9">
+          <SelectField label="Employee" required>
+            <option value="" disabled>
+              Select employee
+            </option>
+            {employees.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.name}
+              </option>
+            ))}
+          </SelectField>
+          <TextField label="Amount" type="number" min="1" required />
+          <TextField label="Date" type="date" required />
+        </div>
+      </Modal>
+    </AppShell>
+  );
+}
+
+/* ---------------- Employee Profile ---------------- */
+export function EmployeeProfilePage({ employeeId }: { employeeId: string }) {
+  const employee = employees.find((e) => e.id === employeeId) ?? employees[0];
+  if (!employee) return null;
+  const history = advances.filter((a) => a.id === employee.id);
+  const initials = employee.name
+    .split(" ")
+    .map((x) => x[0])
+    .join("");
+  return (
+    <AppShell>
+      <PageHeader
+        title={employee.name}
+        eyebrow="Employee Profile"
+        back={{ to: "/advances", label: "Advances" }}
+      />
+
+      <div className="grid gap-16 lg:grid-cols-[0.8fr_1.2fr]">
+        <div data-reveal>
+          <Eyebrow className="mb-4">Record</Eyebrow>
+          <h2 className="glyph-serif text-5xl text-foreground">{initials}</h2>
+          <div className="hairline-t mt-6">
+            {[
+              ["Employee ID", employee.id],
+              ["Department", employee.department],
+              ["Designation", employee.role],
+              ["Years worked", `${employee.years} years`],
+              ["Salary", employee.salary],
+              ["Rating", `${employee.rating} / 5`],
+              ["Leave used", `${employee.leave} days`],
+            ].map(([k, v]) => (
+              <DataRow key={k}>
+                <span className="text-sm text-muted-foreground">{k}</span>
+                <span className="text-[15px] text-foreground md:text-right">{v}</span>
+              </DataRow>
+            ))}
+          </div>
+        </div>
+
+        <div data-reveal>
+          <Eyebrow className="mb-4">Ledger</Eyebrow>
+          <h2 className="glyph-serif mb-8 text-3xl text-foreground md:text-4xl">Advance history</h2>
+          <div>
+            {history.length === 0 && (
+              <p className="py-10 text-sm text-muted-foreground">No advances on record.</p>
+            )}
+            {history.map((a) => (
+              <DataRow key={`${a.date}-${a.time}`}>
+                <span>
+                  <span className="block text-[15px] text-foreground">{a.amount}</span>
+                  <span className="mt-1 block text-xs text-muted-foreground">
+                    {a.date} · {a.time}
+                  </span>
+                </span>
+                <span className="justify-self-end text-xs uppercase tracking-[0.16em] text-muted-foreground md:text-right">
+                  Approved
+                </span>
+              </DataRow>
+            ))}
+          </div>
+        </div>
+      </div>
+    </AppShell>
+  );
+}
+
+/* ---------------- Analytics ---------------- */
+const chartData = [
+  { m: "Apr", tasks: 68, clients: 22 },
+  { m: "May", tasks: 75, clients: 27 },
+  { m: "Jun", tasks: 72, clients: 29 },
+  { m: "Jul", tasks: 86, clients: 34 },
+  { m: "Aug", tasks: 91, clients: 38 },
+  { m: "Sep", tasks: 96, clients: 42 },
+];
+
+const chartTip = {
+  background: "transparent",
+  border: "none",
+  boxShadow: "none",
+  color: "var(--foreground)",
+  fontSize: 13,
+} as const;
+
+export function AnalyticsPage() {
+  return (
+    <AppShell>
+      <PageHeader title="Company performance" eyebrow="Executive view" />
+
+      <section data-reveal className="hairline-t mb-16">
+        <KpiBand
+          items={metrics
+            .slice(0, 4)
+            .map((row) => ({ label: row[0] ?? "", value: row[1] ?? "", note: row[2] ?? "" }))}
+        />
+      </section>
+      <section className="hairline-t mb-16 grid gap-x-20 gap-y-14 lg:grid-cols-2">
+        {[
+          { eyebrow: "Throughput", title: "Task completion", key: "tasks" },
+          { eyebrow: "Reach", title: "Client growth", key: "clients" },
+        ].map((chart) => (
+          <div key={chart.key} data-reveal>
+            <div className="mb-6 border-b border-border pb-5">
+              <Eyebrow className="mb-3">{chart.eyebrow}</Eyebrow>
+              <h2 className="glyph-serif text-3xl text-foreground">{chart.title}</h2>
+            </div>
+            <div className="h-48 w-full md:h-56">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 4, right: 0, left: -16, bottom: 0 }}>
+                  <XAxis
+                    dataKey="m"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
+                    dy={12}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+                    width={44}
+                  />
+                  <Tooltip
+                    cursor={{ stroke: "var(--border)" }}
+                    contentStyle={chartTip}
+                    itemStyle={{ color: "var(--foreground)" }}
+                    labelStyle={{
+                      color: "var(--muted-foreground)",
+                      textTransform: "uppercase",
+                      fontSize: 11,
+                      letterSpacing: "0.14em",
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey={chart.key}
+                    stroke="var(--foreground)"
+                    strokeWidth={1.25}
+                    fill="rgba(234,230,225,0.04)"
+                    dot={false}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        ))}
+      </section>
+
+      <section data-reveal className="hairline-t pt-10">
+        <Eyebrow className="mb-4">Signal</Eyebrow>
+        <h2 className="glyph-serif mb-8 text-3xl text-foreground md:text-4xl">Recent activity</h2>
+        <div>
+          {[
+            "Maya approved invoice INV-2048",
+            "Arjun completed Aster Labs inspection",
+            "Sara added Nova Retail to client workspace",
+            "Dev uploaded before and after evidence",
+          ].map((x, i) => (
+            <div key={x} className="hairline-b flex gap-6 py-5">
+              <span className="w-8 text-xs tabular-nums text-muted-foreground">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <span className="text-[15px] text-foreground">{x}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+    </AppShell>
+  );
+}
+
+/* ---------------- Vault ---------------- */
+export function VaultPage() {
+  const [view, setView] = useState<"grid" | "list">("list");
+  const [path, setPath] = useState(["Personal Vault"]);
+  const items = [
+    { name: "FY26 Contracts", meta: "Folder · 12 files", folder: true },
+    { name: "Employee Records", meta: "Folder · 8 files", folder: true },
+    { name: "Aster Invoice.pdf", meta: "1.4 MB", folder: false },
+    { name: "Site Photo.jpg", meta: "3.1 MB", folder: false },
+    { name: "Payroll Sep.xlsx", meta: "612 KB", folder: false },
+  ];
+  return (
+    <AppShell>
+      <PageHeader
+        title="Personal Vault"
+        eyebrow="Private storage"
+        action={
+          <div className="flex gap-2">
+            <Button variant="secondary">Upload</Button>
+            <Button onClick={() => setPath([...path, "New Folder"])}>New Folder</Button>
+          </div>
+        }
+      />
+
+      <div className="border-b border-border pb-4">
+        <div className="flex flex-wrap items-center justify-between gap-6">
+          <div className="flex flex-wrap items-center gap-1 text-sm">
+            {path.map((p, i) => (
+              <button
+                key={p}
+                onClick={() => setPath(path.slice(0, i + 1))}
+                className={cn(
+                  "flex items-center gap-2 transition-opacity duration-500 hover:opacity-60",
+                  i === path.length - 1 ? "text-foreground" : "text-muted-foreground",
+                )}
+              >
+                {i > 0 && <span className="text-muted-foreground/40">—</span>}
+                {p}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-6">
+            <button
+              onClick={() => setView("list")}
+              className={cn(
+                "flex items-center gap-2 text-xs uppercase tracking-[0.16em] transition-opacity duration-500 hover:opacity-60",
+                view === "list" ? "text-foreground" : "text-muted-foreground",
+              )}
+            >
+              <List className="size-3.5" /> List
+            </button>
+            <button
+              onClick={() => setView("grid")}
+              className={cn(
+                "flex items-center gap-2 text-xs uppercase tracking-[0.16em] transition-opacity duration-500 hover:opacity-60",
+                view === "grid" ? "text-foreground" : "text-muted-foreground",
+              )}
+            >
+              <Grid2X2 className="size-3.5" /> Grid
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {view === "list" ? (
+        <div className="mt-2">
+          {items.map((item) => (
+            <DataRow key={item.name}>
+              <span className="flex items-center gap-4">
+                {item.folder ? (
+                  <Folder className="size-4 shrink-0 text-muted-foreground" />
+                ) : (
+                  <Paperclip className="size-4 shrink-0 text-muted-foreground" />
+                )}
+                <span className="text-[15px] text-foreground">{item.name}</span>
+              </span>
+              <span className="flex items-center justify-end gap-4 text-xs text-muted-foreground md:text-right">
+                {item.meta}
+                <MoreHorizontal className="size-4 text-muted-foreground" />
+              </span>
+            </DataRow>
+          ))}
+        </div>
+      ) : (
+        <div className="mt-6 grid grid-cols-2 gap-px bg-border md:grid-cols-4">
+          {items.map((item) => (
+            <button
+              key={item.name}
+              className="bg-background p-6 text-left transition-opacity duration-500 hover:opacity-70"
+            >
+              {item.folder ? (
+                <Folder className="size-5 text-muted-foreground" />
+              ) : (
+                <Paperclip className="size-5 text-muted-foreground" />
+              )}
+              <span className="mt-6 block text-sm text-foreground">{item.name}</span>
+              <span className="mt-1 block text-xs text-muted-foreground">{item.meta}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      <label className="group mt-10 grid min-h-40 cursor-pointer place-items-center border border-dashed border-border transition-colors duration-500 hover:border-foreground/40">
+        <span className="text-center">
+          <UploadCloud className="mx-auto mb-3 size-5 text-muted-foreground" />
+          <span className="block text-sm text-foreground">Drop a file or browse</span>
+          <span className="mt-1 block text-xs text-muted-foreground">
+            Files stay private to your workspace
+          </span>
+        </span>
+        <input type="file" className="hidden" />
+      </label>
+    </AppShell>
+  );
+}
+
+/* ---------------- Bill Book ---------------- */
+export function BillBookPage() {
+  const [tab, setTab] = useState("All");
+  const kpis = [
+    { label: "Paid out", value: "₹8.42L", note: "Across 14 documents" },
+    { label: "Awaiting", value: "₹3.18L", note: "6 documents pending" },
+    { label: "In draft", value: "₹74K", note: "2 documents in review" },
+  ];
+  return (
+    <AppShell>
+      <PageHeader
+        title="Bill Book"
+        eyebrow="Finance workspace"
+        action={<Button>New document</Button>}
+      />
+
+      <section data-reveal className="hairline-t mb-14">
+        <KpiBand items={kpis} />
+      </section>
+
+      <div className="flex gap-7 border-b border-border pb-3">
+        {["All", "Quotations", "Invoices", "Bills"].map((x) => (
+          <button
+            key={x}
+            onClick={() => setTab(x)}
+            className={cn(
+              "nav-link pb-2 text-xs uppercase tracking-[0.16em] transition-opacity duration-500 hover:opacity-60",
+              tab === x ? "is-active text-foreground" : "text-muted-foreground",
+            )}
+          >
+            {x}
+          </button>
+        ))}
+      </div>
+
+      <div className="hidden grid-cols-[150px_1fr_120px_150px_120px] gap-6 border-b border-border py-3 md:grid">
+        <span className="eyebrow">Reference</span>
+        <span className="eyebrow">Client</span>
+        <span className="eyebrow">Type</span>
+        <span className="eyebrow text-right">Amount</span>
+        <span className="eyebrow text-right">Status</span>
+      </div>
+      <div>
+        {bills
+          .filter((b) => tab === "All" || `${b.type}s` === tab)
+          .map((b) => (
+            <div
+              key={b.id}
+              className="hairline-b grid gap-2 py-5 transition-opacity duration-500 hover:opacity-70 md:grid-cols-[150px_1fr_120px_150px_120px] md:items-center md:gap-6"
+            >
+              <span className="text-[15px] text-foreground">{b.id}</span>
+              <span className="text-sm text-muted-foreground">{b.client}</span>
+              <span className="text-sm text-muted-foreground">{b.type}</span>
+              <span className="text-[15px] text-foreground md:text-right">{b.amount}</span>
+              <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground md:text-right">
+                {b.status}
+              </span>
+            </div>
+          ))}
+      </div>
+    </AppShell>
+  );
+}
+
+/* ---------------- Chats ---------------- */
+export function ChatsPage() {
+  const groups = ["Aster Labs", "Nova Retail", "Meridian House", "Arc Systems"];
+  const [active, setActive] = useState(groups[0] ?? "");
+  const [query, setQuery] = useState("");
+  const [message, setMessage] = useState("");
+  const [sent, setSent] = useState<string[]>([]);
+  return (
+    <AppShell>
+      <PageHeader title="Client communication" eyebrow="Group Chats" />
+
+      <div className="grid lg:grid-cols-[320px_1fr]">
+        <div className="border-b border-border lg:border-b-0 lg:border-r lg:pr-10">
+          <div className="relative border-b border-border">
+            <Search className="absolute left-1 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search chats"
+              className="h-14 w-full bg-transparent pl-8 pr-3 text-[15px] text-foreground outline-none placeholder:text-muted-foreground/60"
+            />
+          </div>
+          <div>
+            {groups
+              .filter((g) => g.toLowerCase().includes(query.toLowerCase()))
+              .map((g) => (
+                <button
+                  key={g}
+                  onClick={() => setActive(g)}
+                  className={cn(
+                    "group flex w-full items-center justify-between border-b border-border py-6 pl-1 text-left transition-opacity duration-500 hover:opacity-70",
+                    active === g ? "" : "opacity-50",
+                  )}
+                >
+                  <span className="flex items-center gap-5">
+                    <span className="glyph-serif text-xl leading-none text-foreground">
+                      {g.slice(0, 1)}
+                    </span>
+                    <span>
+                      <span className="block text-[15px] text-foreground">{g}</span>
+                      <span className="mt-1 block text-xs text-muted-foreground">Active now</span>
+                    </span>
+                  </span>
+                  {active === g && <span className="mr-1 h-1 w-1 rounded-full bg-foreground" />}
+                </button>
+              ))}
+          </div>
+        </div>
+
+        <section className="flex min-h-[560px] flex-col lg:pl-12">
+          <div className="border-b border-border py-5">
+            <h3 className="glyph-serif text-2xl text-foreground">{active}</h3>
+            <p className="mt-2 text-xs uppercase tracking-[0.16em] text-muted-foreground">
+              8 members · 3 online
+            </p>
+          </div>
+
+          <div className="flex-1 space-y-8 py-9">
+            <div className="max-w-md">
+              <p className="text-[15px] leading-relaxed text-foreground">
+                The service team has reached the site. We’ll share photos shortly.
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground">Sara · 4:16 PM</p>
+            </div>
+            <div className="ml-auto max-w-md text-right">
+              <p className="text-[15px] leading-relaxed text-foreground">
+                Thank you. Please also attach the signed checklist.
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground">You · 4:19 PM</p>
+            </div>
+            {sent.map((m, i) => (
+              <div key={i} className="ml-auto max-w-md text-right">
+                <p className="text-[15px] leading-relaxed text-foreground">{m}</p>
+                <p className="mt-2 text-xs text-muted-foreground">You · just now</p>
+              </div>
+            ))}
+            <div className="flex max-w-md items-start gap-3">
+              <MessageCircle className="mt-1 size-4 shrink-0 text-muted-foreground" />
+              <p className="text-[15px] leading-relaxed text-muted-foreground">
+                Awaiting client response on the checklist.
+              </p>
+            </div>
+          </div>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!message.trim()) return;
+              setSent([...sent, message.trim()]);
+              setMessage("");
+            }}
+            className="hairline-t flex items-center gap-4 pt-4"
+          >
+            <input
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Write a message…"
+              className="h-14 flex-1 bg-transparent text-[15px] text-foreground outline-none placeholder:text-muted-foreground/60"
+            />
+            <Button type="submit" size="icon" aria-label="Send">
+              <Send className="size-4" />
+            </Button>
+          </form>
+        </section>
+      </div>
+    </AppShell>
+  );
+}
+
+/* ---------------- Settings ---------------- */
+export function SettingsPage() {
+  return (
+    <AppShell>
+      <PageHeader title="Profile Settings" eyebrow="Your account" />
+
+      <div className="grid gap-16 lg:grid-cols-[0.8fr_1.2fr]">
+        <div data-reveal>
+          <Eyebrow className="mb-4">Identity</Eyebrow>
+          <h2 className="glyph-serif text-5xl text-foreground">LK</h2>
+          <div className="hairline-t mt-6">
+            <DataRow>
+              <span className="text-sm text-muted-foreground">Name</span>
+              <span className="text-[15px] text-foreground md:text-right">Linkesh Kumar</span>
+            </DataRow>
+            <DataRow>
+              <span className="text-sm text-muted-foreground">Role</span>
+              <span className="text-[15px] text-foreground md:text-right">ECHO Administrator</span>
+            </DataRow>
+            <DataRow>
+              <span className="text-sm text-muted-foreground">Email</span>
+              <span className="text-[15px] text-foreground md:text-right">linkesh@echo.in</span>
+            </DataRow>
+          </div>
+        </div>
+
+        <div>
+          <div data-reveal>
+            <Eyebrow className="mb-4">01</Eyebrow>
+            <h2 className="glyph-serif mb-8 text-3xl text-foreground md:text-4xl">
+              Personal details
+            </h2>
+          </div>
+          <section data-reveal className="hairline-t py-10 first:border-t-0">
+            <div className="grid gap-x-16 gap-y-9 md:grid-cols-2">
+              <TextField label="Name" defaultValue="Linkesh Kumar" />
+              <TextField label="Email" type="email" defaultValue="linkesh@echo.in" />
+              <TextField label="Phone" defaultValue="+91 98765 43210" />
+              <TextField label="New password" type="password" />
+            </div>
+          </section>
+
+          <div data-reveal>
+            <Eyebrow className="mb-4">02</Eyebrow>
+            <h2 className="glyph-serif mb-8 text-3xl text-foreground md:text-4xl">Appearance</h2>
+          </div>
+          <section data-reveal className="hairline-t py-10">
+            <button
+              type="button"
+              onClick={() => {
+                const dark = document.documentElement.classList.toggle("dark", true);
+                window.localStorage.setItem("echo-theme", "dark");
+              }}
+              className="group flex w-full items-center justify-between border-b border-border py-5 text-left transition-opacity duration-500 hover:opacity-70"
+            >
+              <span className="text-sm text-foreground">Theme</span>
+              <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                Obsidian
+              </span>
+            </button>
+          </section>
+
+          <Button className="mt-8">Save changes</Button>
+        </div>
+      </div>
+    </AppShell>
+  );
+}
+
+/* ---------------- Help ---------------- */
+export function HelpPage() {
+  const [copied, setCopied] = useState("");
+  const contacts: Array<[string, string, string]> = [
+    ["Website", "xelevate.in", "https://xelevate.in"],
+    ["Email", "linkesh@xelevate.in", "mailto:linkesh@xelevate.in"],
+    ["Phone", "+91 9791062642", "tel:+919791062642"],
+  ];
+  return (
+    <AppShell>
+      <PageHeader title="How can we help?" eyebrow="Support" />
+
+      <section data-reveal>
+        <Eyebrow className="mb-4">Direct</Eyebrow>
+        <h2 className="glyph-serif mb-8 max-w-xl text-3xl leading-tight text-foreground md:text-4xl">
+          Reach the ECHO team for product guidance, technical support, or account assistance.
+        </h2>
+        <div>
+          {contacts.map(([label, value, href]) => (
+            <div key={label} className="hairline-b flex items-center justify-between gap-6 py-6">
+              <span className="w-24 text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                {label}
+              </span>
+              <a
+                href={href}
+                className="text-[15px] text-foreground transition-opacity duration-500 hover:opacity-60"
+              >
+                {value}
+              </a>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  navigator.clipboard.writeText(value);
+                  setCopied(label);
+                }}
+              >
+                {copied === label ? "Copied" : <MoreHorizontal className="size-4" />}
+              </Button>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <footer className="hairline-t mt-16 pt-8 text-center">
+        <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground/60">
+          Powered by Xelevate
+        </p>
+      </footer>
+    </AppShell>
+  );
+}

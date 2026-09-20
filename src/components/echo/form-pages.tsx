@@ -1,32 +1,402 @@
 import { useState } from "react";
 import { Mic, Plus, Trash2, UploadCloud } from "lucide-react";
 import { AppShell } from "./app-shell";
-import { Field, inputClass, PageHeader, SaveBar, Section, textareaClass, ToggleRow } from "./primitives";
+import {
+  AreaField,
+  PageHeader,
+  SaveBar,
+  Section,
+  SelectField,
+  TextField,
+  ToggleRow,
+} from "./primitives";
 import { Button } from "@/components/ui/button";
 import { clients, employees } from "@/lib/echo-data";
 
-function Success({ title }: { title: string }) { return <div className="fixed bottom-6 right-6 z-50 rounded-xl bg-success px-5 py-3 text-sm font-semibold text-primary-foreground shadow-card">{title} saved successfully</div>; }
-function FormLayout({ title, eyebrow, children, saved, onSubmit }: { title: string; eyebrow: string; children: React.ReactNode; saved: boolean; onSubmit: (e: React.FormEvent) => void }) { return <AppShell><PageHeader title={title} eyebrow={eyebrow}/><form onSubmit={onSubmit} className="grid gap-5">{children}<SaveBar/></form>{saved && <Success title={title}/>}</AppShell>; }
+function Success({ title }: { title: string }) {
+  return (
+    <div className="fixed bottom-10 left-1/2 z-50 -translate-x-1/2 animate-enter bg-foreground px-6 py-3 text-sm text-background">
+      {title} saved
+    </div>
+  );
+}
+
+function savePayload(): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (typeof document === "undefined") return out;
+  document
+    .querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>("[data-save]")
+    .forEach((el) => {
+      out[el.name || el.id || "field"] = el.value;
+    });
+  return out;
+}
+
+function FormLayout({
+  title,
+  eyebrow,
+  children,
+  saved,
+  onSubmit,
+}: {
+  title: string;
+  eyebrow: string;
+  children: React.ReactNode;
+  saved: boolean;
+  onSubmit: (e: React.FormEvent) => void;
+}) {
+  return (
+    <AppShell>
+      <PageHeader title={title} eyebrow={eyebrow} />
+      <form onSubmit={onSubmit} className="pb-8">
+        {children}
+        <SaveBar />
+      </form>
+      {saved && <Success title={title} />}
+    </AppShell>
+  );
+}
+
 export function NewTaskPage() {
-  const [saved, setSaved] = useState(false); const [recording, setRecording] = useState(false); const [reqs, setReqs] = useState<string[]>([]);
-  const toggle = (x: string) => setReqs(reqs.includes(x) ? reqs.filter(r => r !== x) : [...reqs, x]);
-  return <FormLayout title="Create New Task" eyebrow="Operations" saved={saved} onSubmit={e => { e.preventDefault(); setSaved(true); }}>
-    <Section title="Assignment" description="Choose an employee or enter a team member manually."><Field label="Assign to"><select className={inputClass} required><option value="">Select employee</option>{employees.map(e => <option key={e.id}>{e.name}</option>)}</select></Field><Field label="Manual assignee"><input className={inputClass} maxLength={100} placeholder="Type a name"/></Field><Field label="Task description" className="md:col-span-2"><textarea className={textareaClass} required maxLength={1200} placeholder="Describe the expected outcome…"/></Field><div className="md:col-span-2"><Button type="button" variant={recording ? "destructive" : "secondary"} onClick={() => setRecording(!recording)}><Mic className="size-4"/>{recording ? "Stop recording · 00:08" : "Record voice note"}</Button></div></Section>
-    <Section title="Schedule"><Field label="Date"><input type="date" className={inputClass} required/></Field><Field label="Check in"><input type="time" className={inputClass} required/></Field><Field label="Check out"><input type="time" className={inputClass} required/></Field></Section>
-    <Section title="Employee requirements" description="Selected evidence will appear in the Worker Portal.">{["Upload Before & After", "Upload Voice Reply", "Upload 4 Photos & 1 Video", "Upload Signature", "Upload Mark"].map(x => <ToggleRow key={x} label={x} checked={reqs.includes(x)} onChange={() => toggle(x)}/>)}</Section>
-    <Section title="Narrative"><Field label="Additional notes" className="md:col-span-2"><textarea className={textareaClass} maxLength={2000} placeholder="Context, access instructions, or completion notes…"/></Field></Section>
-  </FormLayout>;
+  const [saved, setSaved] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [reqs, setReqs] = useState<string[]>([]);
+  const toggle = (x: string) =>
+    setReqs(reqs.includes(x) ? reqs.filter((r) => r !== x) : [...reqs, x]);
+  return (
+    <FormLayout
+      title="Create New Task"
+      eyebrow="Operations"
+      saved={saved}
+      onSubmit={(e) => {
+        e.preventDefault();
+        setSaved(true);
+        console.log("task", savePayload());
+      }}
+    >
+      <Section
+        index={1}
+        title="Assignment"
+        description="Choose an employee or enter a team member manually."
+      >
+        <SelectField label="Assign to" name="assignee" required>
+          <option value="" disabled>
+            Select employee
+          </option>
+          {employees.map((e) => (
+            <option key={e.id} value={e.name}>
+              {e.name}
+            </option>
+          ))}
+        </SelectField>
+        <TextField label="Manual assignee" name="manual" maxLength={100} data-save />
+        <AreaField
+          label="Task description"
+          name="description"
+          className="md:col-span-2"
+          required
+          maxLength={1200}
+          data-save
+        />
+        <div className="md:col-span-2 flex items-center gap-4">
+          <Button
+            type="button"
+            variant={recording ? "destructive" : "secondary"}
+            onClick={() => setRecording(!recording)}
+          >
+            <Mic className="size-4" />
+            {recording ? "Stop recording · 00:08" : "Record voice note"}
+          </Button>
+        </div>
+      </Section>
+
+      <Section index={2} title="Schedule">
+        <TextField label="Date" name="date" type="date" required data-save />
+        <TextField label="Check in" name="checkin" type="time" required data-save />
+        <TextField label="Check out" name="checkout" type="time" required data-save />
+      </Section>
+
+      <Section
+        index={3}
+        title="Employee requirements"
+        description="Selected evidence will appear in the Worker Portal."
+      >
+        <div className="md:col-span-2">
+          {[
+            "Upload Before & After",
+            "Upload Voice Reply",
+            "Upload 4 Photos & 1 Video",
+            "Upload Signature",
+            "Upload Mark",
+          ].map((x) => (
+            <ToggleRow key={x} label={x} checked={reqs.includes(x)} onChange={() => toggle(x)} />
+          ))}
+        </div>
+      </Section>
+
+      <Section index={4} title="Narrative">
+        <AreaField
+          label="Additional notes"
+          name="notes"
+          className="md:col-span-2"
+          maxLength={2000}
+          data-save
+        />
+      </Section>
+    </FormLayout>
+  );
 }
+
 export function NewEmployeePage() {
-  const [saved, setSaved] = useState(false); const [account, setAccount] = useState(""); const [confirm, setConfirm] = useState(""); const [tasks, setTasks] = useState([""]); const [permissions, setPermissions] = useState(["Personal Vault"]);
-  return <FormLayout title="Create New Employee" eyebrow="People" saved={saved} onSubmit={e => { e.preventDefault(); setSaved(true); }}>
-    <Section title="Personal"><Field label="Full name"><input className={inputClass} required maxLength={100}/></Field><Field label="Aadhaar number"><input className={inputClass} inputMode="numeric" pattern="[0-9]{12}" maxLength={12} placeholder="12 digits" required/></Field><Field label="PAN"><input className={inputClass} pattern="[A-Z]{5}[0-9]{4}[A-Z]" maxLength={10} placeholder="ABCDE1234F" required/></Field><Field label="Phone number"><input className={inputClass} inputMode="tel" maxLength={15} required/></Field></Section>
-    <Section title="Bank details"><Field label="Account number"><input className={inputClass} value={account} onChange={e => setAccount(e.target.value.replace(/\D/g, "").slice(0, 18))} required/></Field><Field label="Confirm account number"><div className="relative"><input className={inputClass} value={confirm} onChange={e => setConfirm(e.target.value.replace(/\D/g, "").slice(0, 18))} required/><span className={`absolute right-3 top-3 text-xs font-bold ${confirm && confirm === account ? "text-success" : "text-destructive"}`}>{confirm ? confirm === account ? "✓ Match" : "Mismatch" : ""}</span></div></Field><Field label="IFSC"><input className={inputClass} maxLength={11} required/></Field><Field label="Account name"><input className={inputClass} maxLength={100} required/></Field></Section>
-    <Section title="Employment"><Field label="Employee code"><input className={inputClass} required/></Field><Field label="Designation"><input className={inputClass} required/></Field><Field label="Monthly salary"><input className={inputClass} type="number" min="0" required/></Field><Field label="Agreement start"><input className={inputClass} type="date" required/></Field><Field label="Agreement end"><input className={inputClass} type="date" required/></Field></Section>
-    <Section title="Regular daily tasks" description="Add up to 10 recurring responsibilities."><div className="md:col-span-2 grid gap-3">{tasks.map((task, i) => <div key={i} className="grid gap-2 rounded-xl border border-border p-3 md:grid-cols-[1fr_160px_48px]"><input className={inputClass} placeholder="Task name" value={task} onChange={e => setTasks(tasks.map((t, n) => n === i ? e.target.value : t))}/><select className={inputClass}><option>Daily</option><option>Weekly</option><option>Monthly</option></select><Button type="button" variant="ghost" size="icon" onClick={() => setTasks(tasks.filter((_, n) => n !== i))}><Trash2 className="size-4"/></Button></div>)}<Button type="button" variant="secondary" disabled={tasks.length >= 10} onClick={() => setTasks([...tasks, ""])}><Plus className="size-4"/>Add recurring task</Button></div></Section>
-    <Section title="Worker Portal permissions">{["Personal Vault", "Photo Gallery", "Company Official Group", "Voucher Creation"].map(x => <ToggleRow key={x} label={x} checked={permissions.includes(x)} onChange={() => setPermissions(permissions.includes(x) ? permissions.filter(p => p !== x) : [...permissions, x])}/>)}</Section>
-  </FormLayout>;
+  const [saved, setSaved] = useState(false);
+  const [account, setAccount] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [tasks, setTasks] = useState([""]);
+  const [permissions, setPermissions] = useState(["Personal Vault"]);
+  return (
+    <FormLayout
+      title="Create New Employee"
+      eyebrow="People"
+      saved={saved}
+      onSubmit={(e) => {
+        e.preventDefault();
+        setSaved(true);
+      }}
+    >
+      <Section index={1} title="Personal">
+        <TextField label="Full name" name="name" required maxLength={100} data-save />
+        <TextField
+          label="Aadhaar number"
+          name="aadhaar"
+          inputMode="numeric"
+          maxLength={12}
+          required
+          data-save
+        />
+        <TextField label="PAN" name="pan" maxLength={10} required data-save />
+        <TextField
+          label="Phone number"
+          name="phone"
+          inputMode="tel"
+          maxLength={15}
+          required
+          data-save
+        />
+      </Section>
+
+      <Section index={2} title="Bank details">
+        <TextField
+          label="Account number"
+          name="account"
+          value={account}
+          onChange={(e) => setAccount(e.target.value.replace(/\D/g, "").slice(0, 18))}
+          required
+        />
+        <div className="relative">
+          <TextField
+            label="Confirm account number"
+            name="confirm"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value.replace(/\D/g, "").slice(0, 18))}
+            required
+          />
+          <span className="absolute right-0 top-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            {confirm ? (confirm === account ? "Match" : "Mismatch") : ""}
+          </span>
+        </div>
+        <TextField label="IFSC" name="ifsc" maxLength={11} required data-save />
+        <TextField label="Account name" name="acctname" maxLength={100} required data-save />
+      </Section>
+
+      <Section index={3} title="Employment">
+        <TextField label="Employee code" name="code" required data-save />
+        <TextField label="Designation" name="designation" required data-save />
+        <TextField label="Monthly salary" name="salary" type="number" min="0" required data-save />
+        <TextField label="Agreement start" name="start" type="date" required data-save />
+        <TextField label="Agreement end" name="end" type="date" required data-save />
+      </Section>
+
+      <Section
+        index={4}
+        title="Regular daily tasks"
+        description="Add up to 10 recurring responsibilities."
+      >
+        <div className="md:col-span-2">
+          {tasks.map((task, i) => (
+            <div
+              key={i}
+              className="mt-6 grid items-end gap-6 first:mt-0 md:grid-cols-[1fr_180px_44px]"
+            >
+              <TextField
+                label={`Task ${i + 1}`}
+                value={task}
+                onChange={(e) => setTasks(tasks.map((t, n) => (n === i ? e.target.value : t)))}
+              />
+              <SelectField label="Frequency" defaultValue="Daily">
+                <option>Daily</option>
+                <option>Weekly</option>
+                <option>Monthly</option>
+              </SelectField>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setTasks(tasks.filter((_, n) => n !== i))}
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            </div>
+          ))}
+          <Button
+            type="button"
+            variant="ghost"
+            disabled={tasks.length >= 10}
+            onClick={() => setTasks([...tasks, ""])}
+            className="mt-6"
+          >
+            <Plus className="size-4" /> Add recurring task
+          </Button>
+        </div>
+      </Section>
+
+      <Section index={5} title="Worker Portal permissions">
+        <div className="md:col-span-2">
+          {["Personal Vault", "Photo Gallery", "Company Official Group", "Voucher Creation"].map(
+            (x) => (
+              <ToggleRow
+                key={x}
+                label={x}
+                checked={permissions.includes(x)}
+                onChange={() =>
+                  setPermissions(
+                    permissions.includes(x)
+                      ? permissions.filter((p) => p !== x)
+                      : [...permissions, x],
+                  )
+                }
+              />
+            ),
+          )}
+        </div>
+      </Section>
+    </FormLayout>
+  );
 }
-export function NewClientPage() { const [saved, setSaved] = useState(false); const [selected, setSelected] = useState<string[]>([employees[0]?.id ?? "", employees[1]?.id ?? ""]); return <FormLayout title="Create New Client" eyebrow="Clients" saved={saved} onSubmit={e => { e.preventDefault(); if (selected.length >= 2) setSaved(true); }}><Section title="Client details"><Field label="Name"><input className={inputClass} required/></Field><Field label="Company"><input className={inputClass} required/></Field><Field label="Phone"><input className={inputClass} inputMode="tel" required/></Field><Field label="Email"><input className={inputClass} type="email" required/></Field><Field label="GSTIN"><input className={inputClass} maxLength={15}/></Field><Field label="GST address"><textarea className={textareaClass}/></Field></Section><Section title="Client group chat" description="Admin and client are added automatically. Choose 2–20 employees.">{employees.map(e => <ToggleRow key={e.id} label={`${e.name} · ${e.role}`} checked={selected.includes(e.id)} onChange={() => setSelected(selected.includes(e.id) ? selected.filter(x => x !== e.id) : [...selected, e.id])}/>) }<p className={`md:col-span-2 text-xs ${selected.length < 2 ? "text-destructive" : "text-muted-foreground"}`}>{selected.length} employees selected · minimum 2, maximum 20</p></Section></FormLayout>; }
-export function NewActivityPage() { const [saved, setSaved] = useState(false); return <FormLayout title="Create New Activity" eyebrow="Service desk" saved={saved} onSubmit={e => { e.preventDefault(); setSaved(true); }}><Section title="Complaint details"><Field label="Complaint" className="md:col-span-2"><textarea className={textareaClass} required maxLength={1000}/></Field><Field label="Client name"><select className={inputClass} required><option value="">Select client</option>{clients.map(c => <option key={c}>{c}</option>)}</select></Field><Field label="Assigned employee"><select className={inputClass} required><option value="">Select employee</option>{employees.map(e => <option key={e.id}>{e.name}</option>)}</select></Field><Field label="Work required" className="md:col-span-2"><textarea className={textareaClass} required/></Field></Section><Section title="Visual evidence"><UploadBox label="Before photo"/><UploadBox label="After photo"/></Section></FormLayout>; }
-function UploadBox({ label }: { label: string }) { return <label className="grid min-h-36 cursor-pointer place-items-center rounded-xl border border-dashed border-input bg-background/40 text-center transition hover:border-primary"><span><UploadCloud className="mx-auto mb-2 size-5 text-primary"/><strong className="text-sm">{label}</strong><small className="mt-1 block text-muted-foreground">Drop a file or browse</small></span><input type="file" accept="image/*" className="hidden"/></label>; }
+
+export function NewClientPage() {
+  const [saved, setSaved] = useState(false);
+  const [selected, setSelected] = useState<string[]>([
+    employees[0]?.id ?? "",
+    employees[1]?.id ?? "",
+  ]);
+  return (
+    <FormLayout
+      title="Create New Client"
+      eyebrow="Clients"
+      saved={saved}
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (selected.length >= 2) setSaved(true);
+      }}
+    >
+      <Section index={1} title="Client details">
+        <TextField label="Name" name="name" required data-save />
+        <TextField label="Company" name="company" required data-save />
+        <TextField label="Phone" name="phone" inputMode="tel" required data-save />
+        <TextField label="Email" name="email" type="email" required data-save />
+        <TextField label="GSTIN" name="gstin" maxLength={15} data-save />
+        <AreaField label="GST address" name="gstaddr" data-save />
+      </Section>
+
+      <Section
+        index={2}
+        title="Client group chat"
+        description="Admin and client are added automatically. Choose 2–20 employees."
+      >
+        <div className="md:col-span-2">
+          {employees.map((e) => (
+            <ToggleRow
+              key={e.id}
+              label={`${e.name} · ${e.role}`}
+              checked={selected.includes(e.id)}
+              onChange={() =>
+                setSelected(
+                  selected.includes(e.id)
+                    ? selected.filter((x) => x !== e.id)
+                    : [...selected, e.id],
+                )
+              }
+            />
+          ))}
+          <p className="mt-4 text-xs text-muted-foreground">
+            {selected.length} employees selected · minimum 2, maximum 20
+          </p>
+        </div>
+      </Section>
+    </FormLayout>
+  );
+}
+
+export function NewActivityPage() {
+  const [saved, setSaved] = useState(false);
+  return (
+    <FormLayout
+      title="Create New Activity"
+      eyebrow="Service desk"
+      saved={saved}
+      onSubmit={(e) => {
+        e.preventDefault();
+        setSaved(true);
+      }}
+    >
+      <Section index={1} title="Complaint details">
+        <AreaField
+          label="Complaint"
+          className="md:col-span-2"
+          required
+          maxLength={1000}
+          data-save
+        />
+        <SelectField label="Client name" required>
+          <option value="" disabled>
+            Select client
+          </option>
+          {clients.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </SelectField>
+        <SelectField label="Assigned employee" required>
+          <option value="" disabled>
+            Select employee
+          </option>
+          {employees.map((e) => (
+            <option key={e.id} value={e.name}>
+              {e.name}
+            </option>
+          ))}
+        </SelectField>
+        <AreaField label="Work required" className="md:col-span-2" required data-save />
+      </Section>
+
+      <Section index={2} title="Visual evidence">
+        <UploadBox label="Before photo" />
+        <UploadBox label="After photo" />
+      </Section>
+    </FormLayout>
+  );
+}
+
+function UploadBox({ label }: { label: string }) {
+  return (
+    <label className="group grid min-h-36 cursor-pointer place-items-center border border-dashed border-border text-center transition-colors duration-500 hover:border-foreground/40">
+      <span>
+        <UploadCloud className="mx-auto mb-3 size-5 text-muted-foreground" />
+        <strong className="block text-sm font-medium text-foreground">{label}</strong>
+        <small className="mt-1 block text-xs text-muted-foreground">Drop a file or browse</small>
+      </span>
+      <input type="file" accept="image/*" className="hidden" />
+    </label>
+  );
+}
