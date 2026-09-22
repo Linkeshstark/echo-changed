@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mic, Plus, Trash2, UploadCloud } from "lucide-react";
+import { Check, Eye, EyeOff, Mic, Plus, Trash2, UploadCloud } from "lucide-react";
 import { AppShell } from "./app-shell";
 import {
   AreaField,
@@ -153,6 +153,17 @@ export function NewEmployeePage() {
   const [confirm, setConfirm] = useState("");
   const [tasks, setTasks] = useState([""]);
   const [permissions, setPermissions] = useState(["Personal Vault"]);
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+
+  const passwordsMatch =
+    passwordConfirm.length > 0 &&
+    password.length > 0 &&
+    password === passwordConfirm &&
+    password.length >= 6;
+
   return (
     <FormLayout
       title="Create New Employee"
@@ -160,7 +171,10 @@ export function NewEmployeePage() {
       saved={saved}
       onSubmit={(e) => {
         e.preventDefault();
-        setSaved(true);
+        if (passwordsMatch) {
+          setSaved(true);
+          console.log("employee", savePayload());
+        }
       }}
     >
       <Section index={1} title="Personal">
@@ -208,7 +222,77 @@ export function NewEmployeePage() {
         <TextField label="Account name" name="acctname" maxLength={100} required data-save />
       </Section>
 
-      <Section index={3} title="Employment">
+      <Section
+        index={3}
+        title="Account security"
+        description="Set a sign-in password for this employee's portal account."
+      >
+        <div className="relative">
+          <TextField
+            label="New Password"
+            name="password"
+            type={showPassword ? "text" : "password"}
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            minLength={6}
+            maxLength={100}
+            required
+            data-save
+          />
+          <button
+            type="button"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground transition-opacity duration-500 hover:opacity-60"
+          >
+            {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+          </button>
+        </div>
+        <div className="relative">
+          <TextField
+            label="Confirm Password"
+            name="confirm-password"
+            type={showPasswordConfirm ? "text" : "password"}
+            autoComplete="new-password"
+            value={passwordConfirm}
+            onChange={(e) => setPasswordConfirm(e.target.value)}
+            minLength={6}
+            maxLength={100}
+            required
+            data-save
+          />
+          <button
+            type="button"
+            aria-label={showPasswordConfirm ? "Hide password" : "Show password"}
+            onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+            className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground transition-opacity duration-500 hover:opacity-60"
+          >
+            {showPasswordConfirm ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+          </button>
+        </div>
+        <div className="md:col-span-2">
+          {passwordConfirm && password === passwordConfirm && password.length >= 6 ? (
+            <p className="flex items-center gap-2 text-xs uppercase tracking-[0.14em] text-success">
+              <Check className="size-3.5" /> Passwords match
+            </p>
+          ) : passwordConfirm && password !== passwordConfirm ? (
+            <p className="text-xs uppercase tracking-[0.14em] text-destructive">
+              Passwords do not match.
+            </p>
+          ) : password && password.length < 6 ? (
+            <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+              Minimum 6 characters.
+            </p>
+          ) : (
+            <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+              Both fields must match to create the employee.
+            </p>
+          )}
+        </div>
+      </Section>
+
+      <Section index={4} title="Employment">
         <TextField label="Employee code" name="code" required data-save />
         <TextField label="Designation" name="designation" required data-save />
         <TextField label="Monthly salary" name="salary" type="number" min="0" required data-save />
@@ -217,7 +301,7 @@ export function NewEmployeePage() {
       </Section>
 
       <Section
-        index={4}
+        index={5}
         title="Regular daily tasks"
         description="Add up to 10 recurring responsibilities."
       >
@@ -259,7 +343,7 @@ export function NewEmployeePage() {
         </div>
       </Section>
 
-      <Section index={5} title="Worker Portal permissions">
+      <Section index={6} title="Worker Portal permissions">
         <div className="md:col-span-2">
           {["Personal Vault", "Photo Gallery", "Company Official Group", "Voucher Creation"].map(
             (x) => (
