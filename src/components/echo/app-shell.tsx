@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bell, ChevronLeft, ChevronRight, Menu, Search, X } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight, CircleUserRound, Menu, Search, X } from "lucide-react";
 import { Brand, useRevealObserver } from "./primitives";
-import { navItems, searchRecords } from "@/lib/echo-data";
+import { navSections, searchRecords } from "@/lib/echo-data";
 import { cn } from "@/lib/utils";
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -49,27 +49,22 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Transparent glass navigation — 24px blur, underline hover, no pills */}
+      {/* Transparent glass navigation — logo, Home, search, profile, alerts, menu */}
       <header className="echo-glass sticky top-0 z-40 border-b border-border">
         <div className="mx-auto flex h-16 max-w-[1440px] items-center gap-8 px-5 md:px-10">
           <Link to="/dashboard" aria-label="ECHO home" className="shrink-0">
             <Brand />
           </Link>
 
-          <nav className="hidden items-center gap-9 lg:flex" aria-label="Primary">
-            {navItems.map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                className={cn(
-                  "nav-link text-[13px] font-medium tracking-[0.02em] text-muted-foreground transition-colors duration-500 hover:text-foreground",
-                  pathname === item.to && "is-active text-foreground",
-                )}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <Link
+            to="/dashboard"
+            className={cn(
+              "nav-link text-[13px] font-medium tracking-[0.02em] text-muted-foreground transition-colors duration-500 hover:text-foreground",
+              pathname === "/dashboard" && "is-active text-foreground",
+            )}
+          >
+            Home
+          </Link>
 
           <div className="ml-auto flex items-center gap-1.5">
             <button
@@ -83,6 +78,13 @@ export function AppShell({ children }: { children: ReactNode }) {
                 ⌘K
               </kbd>
             </button>
+            <Link
+              to="/settings"
+              aria-label="Profile settings"
+              className="grid size-10 place-items-center text-muted-foreground transition-opacity duration-500 hover:opacity-60"
+            >
+              <CircleUserRound className="size-[18px]" />
+            </Link>
             <button
               type="button"
               aria-label="Notifications"
@@ -143,30 +145,37 @@ export function AppShell({ children }: { children: ReactNode }) {
               </button>
             </div>
             <nav className="flex-1 overflow-y-auto px-7 py-4" aria-label="Menu">
-              {navItems.map((item, i) => (
-                <div key={item.to} className="border-b border-border">
-                  <Link
-                    to={item.to}
-                    onClick={() => setMenuOpen(false)}
-                    className="group flex w-full items-center justify-between py-5"
-                  >
-                    <span className="flex items-baseline gap-4">
-                      <span className="text-[11px] tabular-nums text-muted-foreground/60">
-                        0{i + 1}
-                      </span>
-                      <span
-                        className={cn(
-                          "text-[15px]",
-                          pathname === item.to
-                            ? "text-foreground"
-                            : "text-muted-foreground group-hover:text-foreground",
-                        )}
+              {navSections.map((section) => (
+                <div key={section.title} className="pt-7 first:pt-0">
+                  <p className="mb-2 text-[10px] uppercase tracking-[0.24em] text-muted-foreground/50">
+                    {section.title}
+                  </p>
+                  {section.items.map((item, i) => (
+                    <div key={item.to} className="border-b border-border">
+                      <Link
+                        to={item.to}
+                        onClick={() => setMenuOpen(false)}
+                        className="group flex w-full items-center justify-between py-5"
                       >
-                        {item.label}
-                      </span>
-                    </span>
-                    <ChevronRight className="size-4 text-muted-foreground/60" />
-                  </Link>
+                        <span className="flex items-baseline gap-4">
+                          <span className="text-[11px] tabular-nums text-muted-foreground/60">
+                            0{i + 1}
+                          </span>
+                          <span
+                            className={cn(
+                              "text-[15px]",
+                              pathname === item.to
+                                ? "text-foreground"
+                                : "text-muted-foreground group-hover:text-foreground",
+                            )}
+                          >
+                            {item.label}
+                          </span>
+                        </span>
+                        <ChevronRight className="size-4 text-muted-foreground/60" />
+                      </Link>
+                    </div>
+                  ))}
                 </div>
               ))}
             </nav>

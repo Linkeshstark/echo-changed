@@ -106,6 +106,33 @@ export const navItems = [
   { label: "Raised Activity", to: "/raised-activity", icon: TriangleAlert },
   { label: "Update Raised Activity", to: "/update-activity", icon: RefreshCcw },
 ] as const;
+export const navSections = [
+  {
+    title: "Main",
+    items: [{ label: "Home", to: "/dashboard", icon: Home }],
+  },
+  {
+    title: "Management",
+    items: [
+      { label: "Personal Vault", to: "/vault", icon: Folder },
+      { label: "Bill Book", to: "/bill-book", icon: FileText },
+      { label: "Group Chats", to: "/chats", icon: MessageSquare },
+      { label: "Task Submissions", to: "/submissions", icon: ClipboardCheck },
+      { label: "Payroll", to: "/payroll", icon: Wallet },
+      { label: "Employee Monitor", to: "/monitor", icon: Radar },
+      { label: "Maintenance Chart", to: "/maintenance", icon: Wrench },
+      { label: "Raised Activity", to: "/raised-activity", icon: TriangleAlert },
+      { label: "Update Raised Activity", to: "/update-activity", icon: RefreshCcw },
+    ],
+  },
+  {
+    title: "Account",
+    items: [
+      { label: "Profile Settings", to: "/settings", icon: Settings },
+      { label: "Help", to: "/help", icon: HelpCircle },
+    ],
+  },
+] as const;
 export const quickActions = [
   {
     title: "Create New Task",
