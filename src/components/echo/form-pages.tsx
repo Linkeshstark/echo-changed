@@ -12,6 +12,7 @@ import {
 } from "./primitives";
 import { Button } from "@/components/ui/button";
 import { clients, employees } from "@/lib/echo-data";
+import { cn } from "@/lib/utils";
 
 function Success({ title }: { title: string }) {
   return (
@@ -147,11 +148,250 @@ export function NewTaskPage() {
   );
 }
 
+const WEEKDAYS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+] as const;
+
+type TaskFrequency = "Daily" | "Weekly" | "Monthly";
+
+interface TaskSchedule {
+  title: string;
+  frequency: TaskFrequency;
+  daysPerWeek: number;
+  weekdays: string[];
+  daysPerMonth: number;
+  monthDates: number[];
+  pattern: string;
+}
+
+const newTaskSchedule = (): TaskSchedule => ({
+  title: "",
+  frequency: "Daily",
+  daysPerWeek: 1,
+  weekdays: [],
+  daysPerMonth: 2,
+  monthDates: [],
+  pattern: "",
+});
+
+function ordinal(n: number) {
+  if (n >= 11 && n <= 13) return `${n}th`;
+  switch (n % 10) {
+    case 1:
+      return `${n}st`;
+    case 2:
+      return `${n}nd`;
+    case 3:
+      return `${n}rd`;
+    default:
+      return `${n}th`;
+  }
+}
+
+function taskScheduleSummary(row: TaskSchedule) {
+  if (row.frequency === "Daily") return "Daily";
+  if (row.frequency === "Weekly" && row.weekdays.length)
+    return `Weekly · ${row.daysPerWeek} day${row.daysPerWeek > 1 ? "s" : ""}/week · ${row.weekdays.join(", ")}`;
+  if (row.frequency === "Monthly" && row.pattern)
+    return `Monthly · ${row.daysPerMonth} day${row.daysPerMonth > 1 ? "s" : ""}/month · ${row.pattern}`;
+  if (row.frequency === "Monthly" && row.monthDates.length)
+    return `Monthly · ${row.daysPerMonth} day${row.daysPerMonth > 1 ? "s" : ""}/month · ${row.monthDates
+      .slice()
+      .sort((a, b) => a - b)
+      .map(ordinal)
+      .join(", ")}`;
+  return "";
+}
+
+function RegularTaskRow({
+  index,
+  row,
+  canRemove,
+  onChange,
+  onRemove,
+}: {
+  index: number;
+  row: TaskSchedule;
+  canRemove: boolean;
+  onChange: (next: TaskSchedule) => void;
+  onRemove: () => void;
+}) {
+  const patch = (p: Partial<TaskSchedule>) => onChange({ ...row, ...p });
+  const incomplete =
+    !!row.title.trim() &&
+    ((row.frequency === "Weekly" && row.weekdays.length !== row.daysPerWeek) ||
+      (row.frequency === "Monthly" && !row.pattern && row.monthDates.length !== row.daysPerMonth));
+  const summary = row.title.trim() ? taskScheduleSummary(row) : "";
+
+  return (
+    <div className="mt-6 first:mt-0">
+      <div className="grid items-end gap-6 border-b border-border pb-6 md:grid-cols-[1fr_220px_44px]">
+        <TextField
+          label={`Task ${index + 1}`}
+          value={row.title}
+          onChange={(e) => patch({ title: e.target.value })}
+          maxLength={140}
+          data-save
+        />
+        <SelectField
+          label="Frequency"
+          value={row.frequency}
+          onChange={(e) => patch({ frequency: e.target.value as TaskFrequency })}
+        >
+          <option value="Daily">Daily</option>
+          <option value="Weekly">Weekly</option>
+          <option value="Monthly">Monthly</option>
+        </SelectField>
+        <Button type="button" variant="ghost" size="icon" onClick={onRemove} disabled={!canRemove}>
+          <Trash2 className="size-4" />
+        </Button>
+      </div>
+
+      {row.frequency === "Weekly" && (
+        <div className="mt-6 space-y-6 border-b border-border pb-6">
+          <SelectField
+            label="How many days per week?"
+            value={String(row.daysPerWeek)}
+            onChange={(e) => patch({ daysPerWeek: Number(e.target.value) })}
+          >
+            {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+              <option key={n} value={n}>
+                {n} day{n > 1 ? "s" : ""}
+              </option>
+            ))}
+          </SelectField>
+          <div>
+            <span className="eyebrow">Days of the week</span>
+            <div className="mt-3 grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-4 md:grid-cols-7">
+              {WEEKDAYS.map((d) => {
+                const on = row.weekdays.includes(d);
+                return (
+                  <label
+                    key={d}
+                    className={cn(
+                      "transition-colors duration-500",
+                      on ? "bg-foreground text-background" : "bg-background",
+                    )}
+                  >
+                    <input
+                      type="checkbox"
+                      className="sr-only"
+                      checked={on}
+                      onChange={() =>
+                        patch({
+                          weekdays: on ? row.weekdays.filter((x) => x !== d) : [...row.weekdays, d],
+                        })
+                      }
+                    />
+                    <span className="grid h-12 cursor-pointer place-items-center text-xs uppercase tracking-[0.12em] text-current">
+                      {d.slice(0, 3)}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+            <p className="mt-3 text-xs tabular-nums text-muted-foreground">
+              {row.weekdays.length} of {row.daysPerWeek} selected
+            </p>
+          </div>
+        </div>
+      )}
+
+      {row.frequency === "Monthly" && (
+        <div className="mt-6 space-y-6 border-b border-border pb-6">
+          <div className="grid gap-x-16 gap-y-9 md:grid-cols-2">
+            <SelectField
+              label="How many days per month?"
+              value={String(row.daysPerMonth)}
+              onChange={(e) => patch({ daysPerMonth: Number(e.target.value) })}
+            >
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                <option key={n} value={n}>
+                  {n} day{n > 1 ? "s" : ""}
+                </option>
+              ))}
+            </SelectField>
+            <SelectField
+              label="Or a recurring pattern (optional)"
+              value={row.pattern}
+              onChange={(e) => patch({ pattern: e.target.value })}
+            >
+              <option value="">None</option>
+              <option value="1st Monday of every month">1st Monday of every month</option>
+              <option value="2nd Tuesday of every month">2nd Tuesday of every month</option>
+              <option value="Last Friday of every month">Last Friday of every month</option>
+              <option value="1st of every month">1st of every month</option>
+              <option value="15th of every month">15th of every month</option>
+            </SelectField>
+          </div>
+          <div>
+            <span className="eyebrow">Dates of the month</span>
+            <div className="mt-3 grid grid-cols-7 gap-px border border-border bg-border">
+              {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => {
+                const on = row.monthDates.includes(d);
+                return (
+                  <label
+                    key={d}
+                    className={cn(
+                      "transition-colors duration-500",
+                      on ? "bg-foreground text-background" : "bg-background",
+                    )}
+                  >
+                    <input
+                      type="checkbox"
+                      className="sr-only"
+                      checked={on}
+                      onChange={() =>
+                        patch({
+                          monthDates: on
+                            ? row.monthDates.filter((x) => x !== d)
+                            : [...row.monthDates, d],
+                        })
+                      }
+                    />
+                    <span className="grid h-12 cursor-pointer place-items-center text-xs tabular-nums text-current">
+                      {d}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+            <p className="mt-3 text-xs tabular-nums text-muted-foreground">
+              {row.monthDates.length} of {row.daysPerMonth} selected
+            </p>
+          </div>
+        </div>
+      )}
+
+      {incomplete ? (
+        <p className="mt-5 text-xs uppercase tracking-[0.14em] text-destructive">
+          {row.frequency === "Weekly"
+            ? `Select exactly ${row.daysPerWeek} day${row.daysPerWeek > 1 ? "s" : ""} per week to continue.`
+            : `Select exactly ${row.daysPerMonth} date${row.daysPerMonth > 1 ? "s" : ""} or choose a recurring pattern.`}
+        </p>
+      ) : (
+        summary && (
+          <p className="mt-5 text-xs uppercase tracking-[0.14em] text-muted-foreground">
+            {summary}
+          </p>
+        )
+      )}
+      <input type="hidden" name={`task-${index}-schedule`} value={summary} data-save />
+    </div>
+  );
+}
+
 export function NewEmployeePage() {
   const [saved, setSaved] = useState(false);
   const [account, setAccount] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [tasks, setTasks] = useState([""]);
+  const [tasks, setTasks] = useState<TaskSchedule[]>([newTaskSchedule()]);
   const [permissions, setPermissions] = useState(["Personal Vault"]);
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
@@ -164,6 +404,14 @@ export function NewEmployeePage() {
     password === passwordConfirm &&
     password.length >= 6;
 
+  const scheduleComplete = tasks.every(
+    (t) =>
+      !t.title.trim() ||
+      t.frequency === "Daily" ||
+      (t.frequency === "Weekly" && t.weekdays.length === t.daysPerWeek) ||
+      (t.frequency === "Monthly" && (!!t.pattern || t.monthDates.length === t.daysPerMonth)),
+  );
+
   return (
     <FormLayout
       title="Create New Employee"
@@ -171,7 +419,7 @@ export function NewEmployeePage() {
       saved={saved}
       onSubmit={(e) => {
         e.preventDefault();
-        if (passwordsMatch) {
+        if (passwordsMatch && scheduleComplete) {
           setSaved(true);
           console.log("employee", savePayload());
         }
@@ -307,35 +555,20 @@ export function NewEmployeePage() {
       >
         <div className="md:col-span-2">
           {tasks.map((task, i) => (
-            <div
+            <RegularTaskRow
               key={i}
-              className="mt-6 grid items-end gap-6 first:mt-0 md:grid-cols-[1fr_180px_44px]"
-            >
-              <TextField
-                label={`Task ${i + 1}`}
-                value={task}
-                onChange={(e) => setTasks(tasks.map((t, n) => (n === i ? e.target.value : t)))}
-              />
-              <SelectField label="Frequency" defaultValue="Daily">
-                <option>Daily</option>
-                <option>Weekly</option>
-                <option>Monthly</option>
-              </SelectField>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => setTasks(tasks.filter((_, n) => n !== i))}
-              >
-                <Trash2 className="size-4" />
-              </Button>
-            </div>
+              index={i}
+              row={task}
+              canRemove={tasks.length > 1}
+              onChange={(next) => setTasks(tasks.map((t, n) => (n === i ? next : t)))}
+              onRemove={() => setTasks(tasks.filter((_, n) => n !== i))}
+            />
           ))}
           <Button
             type="button"
             variant="ghost"
             disabled={tasks.length >= 10}
-            onClick={() => setTasks([...tasks, ""])}
+            onClick={() => setTasks([...tasks, newTaskSchedule()])}
             className="mt-6"
           >
             <Plus className="size-4" /> Add recurring task
