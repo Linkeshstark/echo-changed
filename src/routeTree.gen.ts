@@ -17,13 +17,24 @@ import { Route as BillBookRouteImport } from './routes/bill-book'
 import { Route as ChatsRouteImport } from './routes/chats'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as HelpRouteImport } from './routes/help'
+import { Route as MonitorRouteImport } from './routes/monitor'
+import { Route as PayrollRouteImport } from './routes/payroll'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SubmissionsRouteImport } from './routes/submissions'
 import { Route as VaultRouteImport } from './routes/vault'
 import { Route as ActivitiesNewRouteImport } from './routes/activities.new'
 import { Route as ClientsNewRouteImport } from './routes/clients.new'
 import { Route as EmployeesEmployeeIdRouteImport } from './routes/employees.$employeeId'
 import { Route as EmployeesNewRouteImport } from './routes/employees.new'
+import { Route as MonitorIndexRouteImport } from './routes/monitor.index'
+import { Route as MonitorEmployeeIdRouteImport } from './routes/monitor.$employeeId'
+import { Route as PayrollIndexRouteImport } from './routes/payroll.index'
+import { Route as PayrollEmployeeIdRouteImport } from './routes/payroll.$employeeId'
+import { Route as SubmissionsIndexRouteImport } from './routes/submissions.index'
+import { Route as SubmissionsEmployeeIdRouteImport } from './routes/submissions.$employeeId'
 import { Route as TasksNewRouteImport } from './routes/tasks.new'
+import { Route as SubmissionsEmployeeIdIndexRouteImport } from './routes/submissions.$employeeId.index'
+import { Route as SubmissionsEmployeeIdTaskIdRouteImport } from './routes/submissions.$employeeId.$taskId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -65,9 +76,24 @@ const HelpRoute = HelpRouteImport.update({
   path: '/help',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MonitorRoute = MonitorRouteImport.update({
+  id: '/monitor',
+  path: '/monitor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PayrollRoute = PayrollRouteImport.update({
+  id: '/payroll',
+  path: '/payroll',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SubmissionsRoute = SubmissionsRouteImport.update({
+  id: '/submissions',
+  path: '/submissions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VaultRoute = VaultRouteImport.update({
@@ -95,11 +121,53 @@ const EmployeesNewRoute = EmployeesNewRouteImport.update({
   path: '/employees/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MonitorIndexRoute = MonitorIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MonitorRoute,
+} as any)
+const MonitorEmployeeIdRoute = MonitorEmployeeIdRouteImport.update({
+  id: '/$employeeId',
+  path: '/$employeeId',
+  getParentRoute: () => MonitorRoute,
+} as any)
+const PayrollIndexRoute = PayrollIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PayrollRoute,
+} as any)
+const PayrollEmployeeIdRoute = PayrollEmployeeIdRouteImport.update({
+  id: '/$employeeId',
+  path: '/$employeeId',
+  getParentRoute: () => PayrollRoute,
+} as any)
+const SubmissionsIndexRoute = SubmissionsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SubmissionsRoute,
+} as any)
+const SubmissionsEmployeeIdRoute = SubmissionsEmployeeIdRouteImport.update({
+  id: '/$employeeId',
+  path: '/$employeeId',
+  getParentRoute: () => SubmissionsRoute,
+} as any)
 const TasksNewRoute = TasksNewRouteImport.update({
   id: '/tasks/new',
   path: '/tasks/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SubmissionsEmployeeIdIndexRoute =
+  SubmissionsEmployeeIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => SubmissionsEmployeeIdRoute,
+  } as any)
+const SubmissionsEmployeeIdTaskIdRoute =
+  SubmissionsEmployeeIdTaskIdRouteImport.update({
+    id: '/$taskId',
+    path: '/$taskId',
+    getParentRoute: () => SubmissionsEmployeeIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -110,13 +178,24 @@ export interface FileRoutesByFullPath {
   '/chats': typeof ChatsRoute
   '/dashboard': typeof DashboardRoute
   '/help': typeof HelpRoute
+  '/monitor': typeof MonitorRouteWithChildren
+  '/payroll': typeof PayrollRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/submissions': typeof SubmissionsRouteWithChildren
   '/vault': typeof VaultRoute
   '/activities/new': typeof ActivitiesNewRoute
   '/clients/new': typeof ClientsNewRoute
   '/employees/$employeeId': typeof EmployeesEmployeeIdRoute
   '/employees/new': typeof EmployeesNewRoute
+  '/monitor/$employeeId': typeof MonitorEmployeeIdRoute
+  '/payroll/$employeeId': typeof PayrollEmployeeIdRoute
+  '/submissions/$employeeId': typeof SubmissionsEmployeeIdRouteWithChildren
   '/tasks/new': typeof TasksNewRoute
+  '/monitor/': typeof MonitorIndexRoute
+  '/payroll/': typeof PayrollIndexRoute
+  '/submissions/': typeof SubmissionsIndexRoute
+  '/submissions/$employeeId/$taskId': typeof SubmissionsEmployeeIdTaskIdRoute
+  '/submissions/$employeeId/': typeof SubmissionsEmployeeIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -133,7 +212,14 @@ export interface FileRoutesByTo {
   '/clients/new': typeof ClientsNewRoute
   '/employees/$employeeId': typeof EmployeesEmployeeIdRoute
   '/employees/new': typeof EmployeesNewRoute
+  '/monitor/$employeeId': typeof MonitorEmployeeIdRoute
+  '/payroll/$employeeId': typeof PayrollEmployeeIdRoute
   '/tasks/new': typeof TasksNewRoute
+  '/monitor': typeof MonitorIndexRoute
+  '/payroll': typeof PayrollIndexRoute
+  '/submissions': typeof SubmissionsIndexRoute
+  '/submissions/$employeeId/$taskId': typeof SubmissionsEmployeeIdTaskIdRoute
+  '/submissions/$employeeId': typeof SubmissionsEmployeeIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -145,13 +231,24 @@ export interface FileRoutesById {
   '/chats': typeof ChatsRoute
   '/dashboard': typeof DashboardRoute
   '/help': typeof HelpRoute
+  '/monitor': typeof MonitorRouteWithChildren
+  '/payroll': typeof PayrollRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/submissions': typeof SubmissionsRouteWithChildren
   '/vault': typeof VaultRoute
   '/activities/new': typeof ActivitiesNewRoute
   '/clients/new': typeof ClientsNewRoute
   '/employees/$employeeId': typeof EmployeesEmployeeIdRoute
   '/employees/new': typeof EmployeesNewRoute
+  '/monitor/$employeeId': typeof MonitorEmployeeIdRoute
+  '/payroll/$employeeId': typeof PayrollEmployeeIdRoute
+  '/submissions/$employeeId': typeof SubmissionsEmployeeIdRouteWithChildren
   '/tasks/new': typeof TasksNewRoute
+  '/monitor/': typeof MonitorIndexRoute
+  '/payroll/': typeof PayrollIndexRoute
+  '/submissions/': typeof SubmissionsIndexRoute
+  '/submissions/$employeeId/$taskId': typeof SubmissionsEmployeeIdTaskIdRoute
+  '/submissions/$employeeId/': typeof SubmissionsEmployeeIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -164,13 +261,24 @@ export interface FileRouteTypes {
     | '/chats'
     | '/dashboard'
     | '/help'
+    | '/monitor'
+    | '/payroll'
     | '/settings'
+    | '/submissions'
     | '/vault'
     | '/activities/new'
     | '/clients/new'
     | '/employees/$employeeId'
     | '/employees/new'
+    | '/monitor/$employeeId'
+    | '/payroll/$employeeId'
+    | '/submissions/$employeeId'
     | '/tasks/new'
+    | '/monitor/'
+    | '/payroll/'
+    | '/submissions/'
+    | '/submissions/$employeeId/$taskId'
+    | '/submissions/$employeeId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -187,7 +295,14 @@ export interface FileRouteTypes {
     | '/clients/new'
     | '/employees/$employeeId'
     | '/employees/new'
+    | '/monitor/$employeeId'
+    | '/payroll/$employeeId'
     | '/tasks/new'
+    | '/monitor'
+    | '/payroll'
+    | '/submissions'
+    | '/submissions/$employeeId/$taskId'
+    | '/submissions/$employeeId'
   id:
     | '__root__'
     | '/'
@@ -198,13 +313,24 @@ export interface FileRouteTypes {
     | '/chats'
     | '/dashboard'
     | '/help'
+    | '/monitor'
+    | '/payroll'
     | '/settings'
+    | '/submissions'
     | '/vault'
     | '/activities/new'
     | '/clients/new'
     | '/employees/$employeeId'
     | '/employees/new'
+    | '/monitor/$employeeId'
+    | '/payroll/$employeeId'
+    | '/submissions/$employeeId'
     | '/tasks/new'
+    | '/monitor/'
+    | '/payroll/'
+    | '/submissions/'
+    | '/submissions/$employeeId/$taskId'
+    | '/submissions/$employeeId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -216,7 +342,10 @@ export interface RootRouteChildren {
   ChatsRoute: typeof ChatsRoute
   DashboardRoute: typeof DashboardRoute
   HelpRoute: typeof HelpRoute
+  MonitorRoute: typeof MonitorRouteWithChildren
+  PayrollRoute: typeof PayrollRouteWithChildren
   SettingsRoute: typeof SettingsRoute
+  SubmissionsRoute: typeof SubmissionsRouteWithChildren
   VaultRoute: typeof VaultRoute
   ActivitiesNewRoute: typeof ActivitiesNewRoute
   ClientsNewRoute: typeof ClientsNewRoute
@@ -283,11 +412,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HelpRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/monitor': {
+      id: '/monitor'
+      path: '/monitor'
+      fullPath: '/monitor'
+      preLoaderRoute: typeof MonitorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payroll': {
+      id: '/payroll'
+      path: '/payroll'
+      fullPath: '/payroll'
+      preLoaderRoute: typeof PayrollRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/submissions': {
+      id: '/submissions'
+      path: '/submissions'
+      fullPath: '/submissions'
+      preLoaderRoute: typeof SubmissionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/vault': {
@@ -325,6 +475,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmployeesNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/monitor/': {
+      id: '/monitor/'
+      path: '/'
+      fullPath: '/monitor/'
+      preLoaderRoute: typeof MonitorIndexRouteImport
+      parentRoute: typeof MonitorRoute
+    }
+    '/monitor/$employeeId': {
+      id: '/monitor/$employeeId'
+      path: '/$employeeId'
+      fullPath: '/monitor/$employeeId'
+      preLoaderRoute: typeof MonitorEmployeeIdRouteImport
+      parentRoute: typeof MonitorRoute
+    }
+    '/payroll/': {
+      id: '/payroll/'
+      path: '/'
+      fullPath: '/payroll/'
+      preLoaderRoute: typeof PayrollIndexRouteImport
+      parentRoute: typeof PayrollRoute
+    }
+    '/payroll/$employeeId': {
+      id: '/payroll/$employeeId'
+      path: '/$employeeId'
+      fullPath: '/payroll/$employeeId'
+      preLoaderRoute: typeof PayrollEmployeeIdRouteImport
+      parentRoute: typeof PayrollRoute
+    }
+    '/submissions/': {
+      id: '/submissions/'
+      path: '/'
+      fullPath: '/submissions/'
+      preLoaderRoute: typeof SubmissionsIndexRouteImport
+      parentRoute: typeof SubmissionsRoute
+    }
+    '/submissions/$employeeId': {
+      id: '/submissions/$employeeId'
+      path: '/$employeeId'
+      fullPath: '/submissions/$employeeId'
+      preLoaderRoute: typeof SubmissionsEmployeeIdRouteImport
+      parentRoute: typeof SubmissionsRoute
+    }
     '/tasks/new': {
       id: '/tasks/new'
       path: '/tasks/new'
@@ -332,8 +524,77 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TasksNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/submissions/$employeeId/': {
+      id: '/submissions/$employeeId/'
+      path: '/'
+      fullPath: '/submissions/$employeeId/'
+      preLoaderRoute: typeof SubmissionsEmployeeIdIndexRouteImport
+      parentRoute: typeof SubmissionsEmployeeIdRoute
+    }
+    '/submissions/$employeeId/$taskId': {
+      id: '/submissions/$employeeId/$taskId'
+      path: '/$taskId'
+      fullPath: '/submissions/$employeeId/$taskId'
+      preLoaderRoute: typeof SubmissionsEmployeeIdTaskIdRouteImport
+      parentRoute: typeof SubmissionsEmployeeIdRoute
+    }
   }
 }
+
+interface MonitorRouteChildren {
+  MonitorEmployeeIdRoute: typeof MonitorEmployeeIdRoute
+  MonitorIndexRoute: typeof MonitorIndexRoute
+}
+
+const MonitorRouteChildren: MonitorRouteChildren = {
+  MonitorEmployeeIdRoute: MonitorEmployeeIdRoute,
+  MonitorIndexRoute: MonitorIndexRoute,
+}
+
+const MonitorRouteWithChildren =
+  MonitorRoute._addFileChildren(MonitorRouteChildren)
+
+interface PayrollRouteChildren {
+  PayrollEmployeeIdRoute: typeof PayrollEmployeeIdRoute
+  PayrollIndexRoute: typeof PayrollIndexRoute
+}
+
+const PayrollRouteChildren: PayrollRouteChildren = {
+  PayrollEmployeeIdRoute: PayrollEmployeeIdRoute,
+  PayrollIndexRoute: PayrollIndexRoute,
+}
+
+const PayrollRouteWithChildren =
+  PayrollRoute._addFileChildren(PayrollRouteChildren)
+
+interface SubmissionsEmployeeIdRouteChildren {
+  SubmissionsEmployeeIdTaskIdRoute: typeof SubmissionsEmployeeIdTaskIdRoute
+  SubmissionsEmployeeIdIndexRoute: typeof SubmissionsEmployeeIdIndexRoute
+}
+
+const SubmissionsEmployeeIdRouteChildren: SubmissionsEmployeeIdRouteChildren = {
+  SubmissionsEmployeeIdTaskIdRoute: SubmissionsEmployeeIdTaskIdRoute,
+  SubmissionsEmployeeIdIndexRoute: SubmissionsEmployeeIdIndexRoute,
+}
+
+const SubmissionsEmployeeIdRouteWithChildren =
+  SubmissionsEmployeeIdRoute._addFileChildren(
+    SubmissionsEmployeeIdRouteChildren,
+  )
+
+interface SubmissionsRouteChildren {
+  SubmissionsEmployeeIdRoute: typeof SubmissionsEmployeeIdRouteWithChildren
+  SubmissionsIndexRoute: typeof SubmissionsIndexRoute
+}
+
+const SubmissionsRouteChildren: SubmissionsRouteChildren = {
+  SubmissionsEmployeeIdRoute: SubmissionsEmployeeIdRouteWithChildren,
+  SubmissionsIndexRoute: SubmissionsIndexRoute,
+}
+
+const SubmissionsRouteWithChildren = SubmissionsRoute._addFileChildren(
+  SubmissionsRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -344,7 +605,10 @@ const rootRouteChildren: RootRouteChildren = {
   ChatsRoute: ChatsRoute,
   DashboardRoute: DashboardRoute,
   HelpRoute: HelpRoute,
+  MonitorRoute: MonitorRouteWithChildren,
+  PayrollRoute: PayrollRouteWithChildren,
   SettingsRoute: SettingsRoute,
+  SubmissionsRoute: SubmissionsRouteWithChildren,
   VaultRoute: VaultRoute,
   ActivitiesNewRoute: ActivitiesNewRoute,
   ClientsNewRoute: ClientsNewRoute,

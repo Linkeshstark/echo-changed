@@ -4,15 +4,18 @@ import {
   BarChart3,
   Building2,
   CircleUserRound,
+  ClipboardCheck,
   ClipboardList,
   FileText,
   Folder,
   HelpCircle,
   Home,
   MessageSquare,
+  Radar,
   Settings,
   UserPlus,
   Users,
+  Wallet,
 } from "lucide-react";
 
 export const employees = [
@@ -93,6 +96,9 @@ export const navItems = [
   { label: "Group Chats", to: "/chats", icon: MessageSquare },
   { label: "Profile Settings", to: "/settings", icon: Settings },
   { label: "Help", to: "/help", icon: HelpCircle },
+  { label: "Task Submissions", to: "/submissions", icon: ClipboardCheck },
+  { label: "Payroll", to: "/payroll", icon: Wallet },
+  { label: "Employee Monitor", to: "/monitor", icon: Radar },
 ] as const;
 export const quickActions = [
   {
@@ -126,6 +132,19 @@ export const quickActions = [
     icon: BadgeIndianRupee,
   },
   { title: "Overall Data", detail: "View company performance", to: "/analytics", icon: BarChart3 },
+  {
+    title: "Task Submissions",
+    detail: "Verify employee work evidence",
+    to: "/submissions",
+    icon: ClipboardCheck,
+  },
+  { title: "Payroll", detail: "Run monthly salary payments", to: "/payroll", icon: Wallet },
+  {
+    title: "Employee Monitor",
+    detail: "View every employee in one place",
+    to: "/monitor",
+    icon: Radar,
+  },
 ] as const;
 export const searchRecords = [
   ...employees.map((x) => ({
@@ -164,6 +183,19 @@ export const searchRecords = [
     label: "AC maintenance complaint",
     detail: "Aster Labs",
     to: "/activities/new",
+  },
+  {
+    type: "Module",
+    label: "Task Submissions",
+    detail: "Work verification queue",
+    to: "/submissions",
+  },
+  { type: "Module", label: "Payroll", detail: "Monthly salary payments", to: "/payroll" },
+  {
+    type: "Module",
+    label: "Employee Monitor",
+    detail: "All employee records",
+    to: "/monitor",
   },
 ];
 export const metrics = [

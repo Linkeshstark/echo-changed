@@ -38,13 +38,14 @@ export function PageHeader({
   title: string;
   eyebrow?: string;
   action?: ReactNode;
-  back?: { to: string; label?: string };
+  back?: { to: string; label?: string; params?: Record<string, string> };
 }) {
   return (
     <header className="animate-enter mb-10 mt-4 md:mb-16">
       {back && (
         <Link
           to={back.to}
+          {...(back.params ? { params: back.params } : {})}
           className="mb-6 inline-flex items-center gap-1 text-xs uppercase tracking-[0.2em] text-muted-foreground transition-opacity duration-500 hover:opacity-60"
         >
           <ChevronLeft className="size-3.5" />

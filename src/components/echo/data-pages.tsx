@@ -14,8 +14,16 @@ import {
 } from "lucide-react";
 import { AppShell } from "./app-shell";
 import { DataRow, Eyebrow, KpiBand, Modal, PageHeader, SelectField, TextField } from "./primitives";
+import { TabBar } from "./employee-detail";
 import { Button } from "@/components/ui/button";
 import { advances, bills, employees, metrics } from "@/lib/echo-data";
+import {
+  extendedEmployees,
+  finalPayable,
+  inr,
+  payrollOf,
+  submissionReviews,
+} from "@/lib/echo-modules-data";
 import { cn } from "@/lib/utils";
 
 /* ---------------- Advances ---------------- */
@@ -80,14 +88,37 @@ export function AdvancesPage() {
 }
 
 /* ---------------- Employee Profile ---------------- */
+const profileTabs = [
+  "Overview",
+  "Tasks",
+  "Submissions",
+  "Attendance",
+  "Salary",
+  "Advances",
+  "Leave",
+];
+
+const profileStatusTone: Record<string, string> = {
+  "Pending Review": "text-warning",
+  Pending: "text-warning",
+  "In Progress": "text-warning",
+  Approved: "text-success",
+  Rejected: "text-destructive",
+};
+
 export function EmployeeProfilePage({ employeeId }: { employeeId: string }) {
   const employee = employees.find((e) => e.id === employeeId) ?? employees[0];
+  const [tab, setTab] = useState("Overview");
   if (!employee) return null;
   const history = advances.filter((a) => a.id === employee.id);
   const initials = employee.name
     .split(" ")
     .map((x) => x[0])
     .join("");
+  const ext = extendedOfEmployee(employeeId);
+  const reviews = submissionReviews.find((s) => s.employeeId === employee.id);
+  const salary = payrollOf(employee.id);
+
   return (
     <AppShell>
       <PageHeader
@@ -96,19 +127,185 @@ export function EmployeeProfilePage({ employeeId }: { employeeId: string }) {
         back={{ to: "/advances", label: "Advances" }}
       />
 
-      <div className="grid gap-16 lg:grid-cols-[0.8fr_1.2fr]">
-        <div data-reveal>
-          <Eyebrow className="mb-4">Record</Eyebrow>
-          <h2 className="glyph-serif text-5xl text-foreground">{initials}</h2>
+      <TabBar tabs={profileTabs} active={tab} onChange={setTab} />
+
+      {tab === "Overview" && (
+        <div data-reveal className="grid gap-16 pt-10 lg:grid-cols-[0.8fr_1.2fr]">
+          <div>
+            <Eyebrow className="mb-4">Record</Eyebrow>
+            <h2 className="glyph-serif text-5xl text-foreground">{initials}</h2>
+            <div className="hairline-t mt-6">
+              {[
+                ["Employee ID", employee.id],
+                ["Department", employee.department],
+                ["Designation", employee.role],
+                ["Years worked", `${employee.years} years`],
+                ["Salary", employee.salary],
+                ["Rating", `${employee.rating} / 5`],
+                ["Leave used", `${employee.leave} days`],
+              ].map(([k, v]) => (
+                <DataRow key={k}>
+                  <span className="text-sm text-muted-foreground">{k}</span>
+                  <span className="text-[15px] text-foreground md:text-right">{v}</span>
+                </DataRow>
+              ))}
+            </div>
+          </div>
+          <div>
+            <Eyebrow className="mb-4">Ledger</Eyebrow>
+            <h2 className="glyph-serif mb-8 text-3xl text-foreground md:text-4xl">
+              Advance history
+            </h2>
+            <div>
+              {history.length === 0 && (
+                <p className="py-10 text-sm text-muted-foreground">No advances on record.</p>
+              )}
+              {history.map((a) => (
+                <DataRow key={`${a.date}-${a.time}`}>
+                  <span>
+                    <span className="block text-[15px] text-foreground">{a.amount}</span>
+                    <span className="mt-1 block text-xs text-muted-foreground">
+                      {a.date} · {a.time}
+                    </span>
+                  </span>
+                  <span className="justify-self-end text-xs uppercase tracking-[0.16em] text-muted-foreground md:text-right">
+                    Approved
+                  </span>
+                </DataRow>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab === "Tasks" && (
+        <div data-reveal className="pt-10">
+          <div className="hidden grid-cols-[64px_1fr_140px] gap-6 border-b border-border py-3 lg:grid">
+            <span className="eyebrow">Task</span>
+            <span className="eyebrow">Assignment</span>
+            <span className="eyebrow text-right">Status</span>
+          </div>
+          <div>
+            {[...ext.assignedTasks]
+              .sort((a, b) => b.id - a.id)
+              .map((t) => {
+                const linked = reviews?.tasks.some((r) => r.id === t.id);
+                return (
+                  <Link
+                    key={t.id}
+                    to="/submissions/$employeeId/$taskId"
+                    params={{ employeeId: employee.id, taskId: String(t.id) }}
+                    className={cn(
+                      "grid gap-2 border-b border-border py-5 lg:grid-cols-[64px_1fr_140px] lg:items-center lg:gap-6",
+                      linked
+                        ? "transition-opacity duration-500 hover:opacity-70"
+                        : "pointer-events-none",
+                    )}
+                  >
+                    <span className="text-xs tabular-nums text-muted-foreground">Task #{t.id}</span>
+                    <span className="min-w-0">
+                      <span className="block text-[15px] text-foreground">{t.title}</span>
+                      <span className="mt-1 flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
+                        <span>{t.client}</span>
+                        <span>Due {t.due}</span>
+                        <span>In {t.checkIn}</span>
+                        <span>Out {t.checkOut}</span>
+                      </span>
+                    </span>
+                    <span
+                      className={cn(
+                        "justify-self-end text-xs uppercase tracking-[0.16em]",
+                        profileStatusTone[t.status] ?? "text-muted-foreground",
+                      )}
+                    >
+                      {t.status}
+                    </span>
+                  </Link>
+                );
+              })}
+          </div>
+        </div>
+      )}
+
+      {tab === "Submissions" && (
+        <div data-reveal className="pt-10">
+          <div className="hidden grid-cols-[1fr_140px_160px_160px] gap-6 border-b border-border py-3 md:grid">
+            <span className="eyebrow">Task</span>
+            <span className="eyebrow">Client</span>
+            <span className="eyebrow">Date</span>
+            <span className="eyebrow text-right">Review Result</span>
+          </div>
+          <div>
+            {reviews?.tasks.length ? (
+              reviews.tasks.map((t) => (
+                <Link
+                  key={t.id}
+                  to="/submissions/$employeeId/$taskId"
+                  params={{ employeeId: employee.id, taskId: String(t.id) }}
+                  className="grid gap-2 border-b border-border py-5 transition-opacity duration-500 hover:opacity-70 md:grid-cols-[1fr_140px_160px_160px] md:items-center md:gap-6"
+                >
+                  <span className="text-[15px] text-foreground">
+                    Task #{t.id} — {t.title}
+                  </span>
+                  <span className="text-sm text-muted-foreground">{t.client}</span>
+                  <span className="text-sm text-muted-foreground">{t.date}</span>
+                  <span
+                    className={cn(
+                      "justify-self-end text-xs uppercase tracking-[0.16em]",
+                      profileStatusTone[t.review],
+                    )}
+                  >
+                    {t.review}
+                  </span>
+                </Link>
+              ))
+            ) : (
+              <p className="py-10 text-sm text-muted-foreground">No submissions on record.</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {tab === "Attendance" && (
+        <div data-reveal className="pt-10">
+          <div className="hairline-t mt-6">
+            {(() => {
+              const present = ext.attendance.present.length;
+              const absent = ext.attendance.absent.length;
+              const late = ext.attendance.late.length;
+              return [
+                ["Present days", `${present} days`],
+                ["Absent days", `${absent} days`],
+                ["Late check-ins", `${late} days`],
+                ["Working hours", `${ext.attendance.hours} hrs`],
+                ["Today's check-in", ext.attendance.checkInToday],
+                ["Today's check-out", ext.attendance.checkOutToday],
+              ].map(([k, v]) => (
+                <DataRow key={k}>
+                  <span className="text-sm text-muted-foreground">{k}</span>
+                  <span className="text-[15px] text-foreground md:text-right">{v}</span>
+                </DataRow>
+              ));
+            })()}
+            <div className="pt-8">
+              <Button asChild variant="secondary">
+                <Link to="/monitor/$employeeId" params={{ employeeId: employee.id }}>
+                  Open full attendance calendar
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab === "Salary" && (
+        <div data-reveal className="pt-10">
           <div className="hairline-t mt-6">
             {[
-              ["Employee ID", employee.id],
-              ["Department", employee.department],
-              ["Designation", employee.role],
-              ["Years worked", `${employee.years} years`],
-              ["Salary", employee.salary],
-              ["Rating", `${employee.rating} / 5`],
-              ["Leave used", `${employee.leave} days`],
+              ["Monthly Salary", inr(salary.monthly)],
+              ["Leave Deductions", `− ${inr(salary.leaveDeduction)}`],
+              ["Advance Deductions", `− ${inr(salary.advanceDeduction)}`],
+              ["Final Payable Salary", inr(finalPayable(salary))],
             ].map(([k, v]) => (
               <DataRow key={k}>
                 <span className="text-sm text-muted-foreground">{k}</span>
@@ -116,9 +313,40 @@ export function EmployeeProfilePage({ employeeId }: { employeeId: string }) {
               </DataRow>
             ))}
           </div>
+          <div className="pt-10">
+            <Eyebrow className="mb-3">Salary history</Eyebrow>
+            <div className="hidden grid-cols-[1fr_120px_100px] gap-6 border-b border-border py-3 md:grid">
+              <span className="eyebrow">Month</span>
+              <span className="eyebrow text-right">Amount</span>
+              <span className="eyebrow text-right">Status</span>
+            </div>
+            <div>
+              {salary.history.map((h) => (
+                <div
+                  key={h.month}
+                  className="grid gap-2 border-b border-border py-4 md:grid-cols-[1fr_120px_100px] md:items-center md:gap-6"
+                >
+                  <span className="text-[15px] text-foreground">{h.month}</span>
+                  <span className="text-[15px] text-foreground md:text-right">{inr(h.amount)}</span>
+                  <span className="justify-self-end text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                    {h.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="pt-8">
+              <Button asChild variant="secondary">
+                <Link to="/payroll/$employeeId" params={{ employeeId: employee.id }}>
+                  Open Payroll
+                </Link>
+              </Button>
+            </div>
+          </div>
         </div>
+      )}
 
-        <div data-reveal>
+      {tab === "Advances" && (
+        <div data-reveal className="pt-10">
           <Eyebrow className="mb-4">Ledger</Eyebrow>
           <h2 className="glyph-serif mb-8 text-3xl text-foreground md:text-4xl">Advance history</h2>
           <div>
@@ -140,9 +368,43 @@ export function EmployeeProfilePage({ employeeId }: { employeeId: string }) {
             ))}
           </div>
         </div>
-      </div>
+      )}
+
+      {tab === "Leave" && (
+        <div data-reveal className="pt-10">
+          <div className="hairline-t mt-6">
+            {[
+              ["Leave balance", `${ext.leave.balance} days remaining`],
+              ["Upcoming approved leave", ext.leave.upcoming],
+            ].map(([k, v]) => (
+              <DataRow key={k}>
+                <span className="text-sm text-muted-foreground">{k}</span>
+                <span className="text-[15px] text-foreground md:text-right">{v}</span>
+              </DataRow>
+            ))}
+            <div className="pt-8">
+              <Eyebrow className="mb-3">Leave history</Eyebrow>
+              {ext.leave.history.map((l) => (
+                <DataRow key={`${l.date}-${l.reason}`}>
+                  <span>
+                    <span className="block text-[15px] text-foreground">{l.reason}</span>
+                    <span className="mt-1 block text-xs text-muted-foreground">{l.date}</span>
+                  </span>
+                  <span className="justify-self-end text-xs uppercase tracking-[0.16em] text-muted-foreground md:text-right">
+                    {l.status}
+                  </span>
+                </DataRow>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
+}
+
+function extendedOfEmployee(employeeId: string) {
+  return extendedEmployees.find((e) => e.employee.id === employeeId) ?? extendedEmployees[0]!;
 }
 
 /* ---------------- Analytics ---------------- */
