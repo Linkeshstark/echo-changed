@@ -13,6 +13,8 @@ import {
   UploadCloud,
 } from "lucide-react";
 import { AppShell } from "./app-shell";
+import { GenerateDocModal, GeneratedDocRows } from "./bill-generate";
+import { AssignedActivities, AssignedActivitiesCount } from "./raised-activity";
 import { DataRow, Eyebrow, KpiBand, Modal, PageHeader, SelectField, TextField } from "./primitives";
 import { TabBar } from "./employee-detail";
 import { Button } from "@/components/ui/button";
@@ -224,6 +226,7 @@ export function EmployeeProfilePage({ employeeId }: { employeeId: string }) {
                 );
               })}
           </div>
+          <AssignedActivities employeeId={employee.id} />
         </div>
       )}
 
@@ -263,6 +266,7 @@ export function EmployeeProfilePage({ employeeId }: { employeeId: string }) {
               <p className="py-10 text-sm text-muted-foreground">No submissions on record.</p>
             )}
           </div>
+          <AssignedActivitiesCount employeeId={employee.id} />
         </div>
       )}
 
@@ -631,6 +635,7 @@ export function VaultPage() {
 /* ---------------- Bill Book ---------------- */
 export function BillBookPage() {
   const [tab, setTab] = useState("All");
+  const [generateOpen, setGenerateOpen] = useState(false);
   const kpis = [
     { label: "Paid out", value: "₹8.42L", note: "Across 14 documents" },
     { label: "Awaiting", value: "₹3.18L", note: "6 documents pending" },
@@ -641,7 +646,7 @@ export function BillBookPage() {
       <PageHeader
         title="Bill Book"
         eyebrow="Finance workspace"
-        action={<Button>New document</Button>}
+        action={<Button onClick={() => setGenerateOpen(true)}>Generate</Button>}
       />
 
       <section data-reveal className="hairline-t mb-14">
@@ -687,7 +692,10 @@ export function BillBookPage() {
               </span>
             </div>
           ))}
+        {tab === "All" && <GeneratedDocRows />}
       </div>
+
+      <GenerateDocModal open={generateOpen} onClose={() => setGenerateOpen(false)} />
     </AppShell>
   );
 }

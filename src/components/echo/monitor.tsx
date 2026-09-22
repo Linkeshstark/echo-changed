@@ -14,6 +14,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { AppShell } from "./app-shell";
+import { AssignedActivities, RaisedActivityEvents } from "./raised-activity";
 import { Eyebrow, KpiBand, Modal, PageHeader, SelectField } from "./primitives";
 import {
   DetailRows,
@@ -726,6 +727,7 @@ export function MonitorEmployeePage({ employeeId }: { employeeId: string }) {
                   <TaskRow key={t.id} task={t} x={x} />
                 ))}
             </div>
+            <AssignedActivities employeeId={x.employee.id} />
           </div>
         )}
         {tab === "Submissions" && <SubmissionsTab x={x} />}
@@ -758,6 +760,7 @@ export function MonitorEmployeePage({ employeeId }: { employeeId: string }) {
             </div>
           ))}
         </div>
+        <RaisedActivityEvents employeeId={x.employee.id} />
       </SectionBlock>
 
       {actionMsg && (

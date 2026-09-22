@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bell, ChevronRight, Menu, Search, X } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight, Menu, Search, X } from "lucide-react";
 import { Brand, useRevealObserver } from "./primitives";
 import { navItems, searchRecords } from "@/lib/echo-data";
 import { cn } from "@/lib/utils";
@@ -104,6 +104,14 @@ export function AppShell({ children }: { children: ReactNode }) {
       </header>
 
       <main className="mx-auto min-h-[calc(100vh-8rem)] max-w-[1440px] px-5 pb-24 pt-10 md:px-10 md:pt-16">
+        {pathname !== "/dashboard" && (
+          <Link
+            to="/dashboard"
+            className="mb-10 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground transition-opacity duration-500 hover:opacity-60"
+          >
+            <ChevronLeft className="size-3.5" /> Back to Home
+          </Link>
+        )}
         {children}
       </main>
 

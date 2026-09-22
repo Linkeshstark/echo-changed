@@ -12,10 +12,13 @@ import {
   Home,
   MessageSquare,
   Radar,
+  RefreshCcw,
   Settings,
+  TriangleAlert,
   UserPlus,
   Users,
   Wallet,
+  Wrench,
 } from "lucide-react";
 
 export const employees = [
@@ -99,6 +102,9 @@ export const navItems = [
   { label: "Task Submissions", to: "/submissions", icon: ClipboardCheck },
   { label: "Payroll", to: "/payroll", icon: Wallet },
   { label: "Employee Monitor", to: "/monitor", icon: Radar },
+  { label: "Maintenance Chart", to: "/maintenance", icon: Wrench },
+  { label: "Raised Activity", to: "/raised-activity", icon: TriangleAlert },
+  { label: "Update Raised Activity", to: "/update-activity", icon: RefreshCcw },
 ] as const;
 export const quickActions = [
   {
@@ -144,6 +150,24 @@ export const quickActions = [
     detail: "View every employee in one place",
     to: "/monitor",
     icon: Radar,
+  },
+  {
+    title: "Maintenance Chart",
+    detail: "Track all maintenance work",
+    to: "/maintenance",
+    icon: Wrench,
+  },
+  {
+    title: "Raised Activity",
+    detail: "Review client complaints",
+    to: "/raised-activity",
+    icon: TriangleAlert,
+  },
+  {
+    title: "Update Raised Activity",
+    detail: "Change any activity status",
+    to: "/update-activity",
+    icon: RefreshCcw,
   },
 ] as const;
 export const searchRecords = [
@@ -196,6 +220,42 @@ export const searchRecords = [
     label: "Employee Monitor",
     detail: "All employee records",
     to: "/monitor",
+  },
+  {
+    type: "Module",
+    label: "Maintenance Chart",
+    detail: "Maintenance work records",
+    to: "/maintenance",
+  },
+  {
+    type: "Module",
+    label: "Raised Activity",
+    detail: "Client complaint desk",
+    to: "/raised-activity",
+  },
+  {
+    type: "Module",
+    label: "Update Raised Activity",
+    detail: "Change activity status",
+    to: "/update-activity",
+  },
+  {
+    type: "Activity",
+    label: "RA-001 — Uninterrupted power supply error",
+    detail: "Aster Labs · High",
+    to: "/raised-activity/RA-001",
+  },
+  {
+    type: "Activity",
+    label: "RA-002 — Frost build-up in display unit",
+    detail: "Nova Retail · Medium",
+    to: "/raised-activity/RA-002",
+  },
+  {
+    type: "Maintenance",
+    label: "MNT-001 — AC preventive maintenance",
+    detail: "Aster Labs",
+    to: "/maintenance",
   },
 ];
 export const metrics = [
