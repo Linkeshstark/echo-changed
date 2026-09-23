@@ -11,7 +11,7 @@
  * Hierarchy comes from typography, spacing, alignment, and 1px hairlines.
  *
  * Typography: Instrument Serif (headings) · Inter (UI)
- * Palette:    #0F0F10 / #171717 · #EAE6E1 · #B6B1AA · #2A2A2A
+ // Palette:    day #FDFDFD / #000000 · night #0A0A0A / #F0F0F0 · accent #F2470C
  * Motion:     cubic-bezier(.22,1,.36,1) · slow cinematic fades
  */
 
@@ -190,7 +190,7 @@
 /* Quiet-luxury surfaces: one continuous canvas, nothing floats. */
 @layer utilities {
   .echo-glass {
-    background: rgba(15, 15, 16, 0.55);
+    background: color-mix(in oklab, var(--background) 72%, transparent);
     -webkit-backdrop-filter: blur(24px) saturate(140%);
     backdrop-filter: blur(24px) saturate(140%);
   }
