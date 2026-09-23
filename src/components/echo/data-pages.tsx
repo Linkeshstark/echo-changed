@@ -16,7 +16,16 @@ import {
 import { AppShell } from "./app-shell";
 import { GenerateDocModal, GeneratedDocRows } from "./bill-generate";
 import { AssignedActivities, AssignedActivitiesCount } from "./raised-activity";
-import { DataRow, Eyebrow, KpiBand, Modal, PageHeader, SelectField, TextField } from "./primitives";
+import {
+  DataRow,
+  Eyebrow,
+  KpiBand,
+  Modal,
+  PageHeader,
+  SelectField,
+  TextField,
+  ThemeToggle,
+} from "./primitives";
 import { TabBar } from "./employee-detail";
 import { Button } from "@/components/ui/button";
 import { advances, bills, employees, metrics } from "@/lib/echo-data";
@@ -862,19 +871,10 @@ export function SettingsPage() {
             <h2 className="glyph-serif mb-8 text-3xl text-foreground md:text-4xl">Appearance</h2>
           </div>
           <section data-reveal className="hairline-t py-10">
-            <button
-              type="button"
-              onClick={() => {
-                const dark = document.documentElement.classList.toggle("dark", true);
-                window.localStorage.setItem("echo-theme", "dark");
-              }}
-              className="group flex w-full items-center justify-between border-b border-border py-5 text-left transition-opacity duration-500 hover:opacity-70"
-            >
+            <div className="group flex w-full items-center justify-between border-b border-border py-5">
               <span className="text-sm text-foreground">Theme</span>
-              <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                Obsidian
-              </span>
-            </button>
+              <ThemeToggle />
+            </div>
           </section>
 
           <Button className="mt-8">Save changes</Button>

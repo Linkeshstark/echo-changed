@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Bell, ChevronLeft, ChevronRight, CircleUserRound, Menu, Search, X } from "lucide-react";
-import { Brand, useRevealObserver } from "./primitives";
+import { Brand, ThemeToggle, useRevealObserver } from "./primitives";
 import { navSections, searchRecords } from "@/lib/echo-data";
 import { cn } from "@/lib/utils";
 
@@ -67,6 +67,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
 
           <div className="ml-auto flex items-center gap-1.5">
+            <ThemeToggle className="hidden sm:flex" />
             <button
               type="button"
               onClick={() => setSearchOpen(true)}
