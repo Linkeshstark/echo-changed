@@ -72,46 +72,47 @@
 
 :root {
   --radius: 0.5rem;
-  --background: #0f0f10;
-  --foreground: #eae6e1;
-  --card: #171717;
-  --card-foreground: #eae6e1;
-  --popover: #171717;
-  --popover-foreground: #eae6e1;
-  --primary: #eae6e1;
-  --primary-foreground: #0f0f10;
-  --secondary: #171717;
-  --secondary-foreground: #eae6e1;
-  --muted: #171717;
-  --muted-foreground: #b6b1aa;
-  --accent: #171717;
-  --accent-foreground: #eae6e1;
+  --background: #f3f1ec;
+  --foreground: #201d19;
+  --card: #fbfaf7;
+  --card-foreground: #201d19;
+  --popover: #fbfaf7;
+  --popover-foreground: #201d19;
+  --primary: #201d19;
+  --primary-foreground: #f3f1ec;
+  --secondary: #e9e6df;
+  --secondary-foreground: #201d19;
+  --muted: #eceae4;
+  --muted-foreground: #6d6861;
+  --accent: #e4e0d8;
+  --accent-foreground: #201d19;
   --destructive: #b3564a;
-  --destructive-foreground: #eae6e1;
-  --border: #2a2a2a;
-  --input: #2a2a2a;
-  --ring: #eae6e1;
-  --chart-1: #b6b1aa;
-  --chart-2: #8f8a84;
-  --chart-3: #6b6763;
-  --chart-4: #4a4845;
-  --chart-5: #2e2d2b;
-  --sidebar: #0f0f10;
-  --sidebar-foreground: #eae6e1;
-  --sidebar-primary: #eae6e1;
-  --sidebar-primary-foreground: #0f0f10;
-  --sidebar-accent: #171717;
-  --sidebar-accent-foreground: #eae6e1;
-  --sidebar-border: #2a2a2a;
-  --sidebar-ring: #eae6e1;
-  --surface: #171717;
-  --surface-strong: #1d1d1e;
-  --success: #9aa78f;
-  --warning: #b6a07a;
+  --destructive-foreground: #ffffff;
+  --border: #dcd7cf;
+  --input: #dcd7cf;
+  --ring: #201d19;
+  --chart-1: #6f6a63;
+  --chart-2: #8f8a82;
+  --chart-3: #a8a39a;
+  --chart-4: #c3beb4;
+  --chart-5: #ddd8cf;
+  --sidebar: #f3f1ec;
+  --sidebar-foreground: #201d19;
+  --sidebar-primary: #201d19;
+  --sidebar-primary-foreground: #f3f1ec;
+  --sidebar-accent: #eceae4;
+  --sidebar-accent-foreground: #201d19;
+  --sidebar-border: #dcd7cf;
+  --sidebar-ring: #201d19;
+  --surface: #fbfaf7;
+  --surface-strong: #edeae3;
+  --success: #6c7d5d;
+  --warning: #9c7f4e;
   --ease-luxury: cubic-bezier(0.22, 1, 0.36, 1);
   --shadow-soft: 0 1px 0 0 var(--border);
-  --shadow-card: 0 24px 70px oklch(0 0 0 / 0.4);
+  --shadow-card: 0 24px 70px oklch(0.2 0 0 / 0.16);
   --shadow-button: 0 1px 0 0 var(--border);
+  color-scheme: light;
 }
 
 .dark {
@@ -155,6 +156,7 @@
   --shadow-soft: 0 1px 0 0 var(--border);
   --shadow-card: 0 24px 70px oklch(0 0 0 / 0.4);
   --shadow-button: 0 1px 0 0 var(--border);
+  color-scheme: dark;
 }
 
 @layer base {
