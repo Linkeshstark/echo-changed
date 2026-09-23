@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import {
   Folder,
   Grid2X2,
   List,
+  LogOut,
   MessageCircle,
   MoreHorizontal,
   Paperclip,
@@ -811,6 +812,11 @@ export function ChatsPage() {
 
 /* ---------------- Settings ---------------- */
 export function SettingsPage() {
+  const navigate = useNavigate();
+  const signOut = () => {
+    window.sessionStorage.removeItem("echo-session");
+    navigate({ to: "/auth" });
+  };
   return (
     <AppShell>
       <PageHeader title="Profile Settings" eyebrow="Your account" />
@@ -872,6 +878,21 @@ export function SettingsPage() {
           </section>
 
           <Button className="mt-8">Save changes</Button>
+
+          <div data-reveal className="mt-8">
+            <Eyebrow className="mb-4">03</Eyebrow>
+            <h2 className="glyph-serif mb-8 text-3xl text-foreground md:text-4xl">Session</h2>
+          </div>
+          <section data-reveal className="hairline-t py-10">
+            <button
+              type="button"
+              onClick={signOut}
+              className="group flex w-full items-center justify-between border-b border-border py-5 text-left transition-opacity duration-500 hover:opacity-70"
+            >
+              <span className="text-sm text-foreground">Sign out</span>
+              <LogOut className="size-4 text-muted-foreground" />
+            </button>
+          </section>
         </div>
       </div>
     </AppShell>
