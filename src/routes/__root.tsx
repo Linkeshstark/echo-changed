@@ -110,6 +110,11 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("echo-theme");if(t==="dark")document.documentElement.classList.add("dark");}catch(e){}})();`,
+          }}
+        />
         <HeadContent />
       </head>
       <body>

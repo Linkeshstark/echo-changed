@@ -104,9 +104,9 @@ export function Dashboard() {
                 type="monotone"
                 dataKey="value"
                 name="Tasks"
-                stroke="var(--foreground)"
+                stroke="var(--accent)"
                 strokeWidth={1.25}
-                fill="rgba(234,230,225,0.04)"
+                fill="rgba(239,77,35,0.07)"
                 dot={false}
               />
             </AreaChart>
@@ -149,7 +149,7 @@ export function Dashboard() {
                   className={
                     "grid size-5 shrink-0 place-items-center border transition-all duration-500 " +
                     (task.done
-                      ? "border-foreground bg-foreground text-background"
+                      ? "border-accent bg-accent text-accent-foreground"
                       : "border-muted-foreground/40 text-transparent")
                   }
                 >

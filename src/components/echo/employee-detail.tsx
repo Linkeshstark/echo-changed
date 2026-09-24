@@ -243,9 +243,9 @@ export function MiniTrend({
           <Area
             type="monotone"
             dataKey={dataKey}
-            stroke="var(--foreground)"
+            stroke="var(--accent)"
             strokeWidth={1.25}
-            fill="rgba(234,230,225,0.04)"
+            fill="rgba(239,77,35,0.07)"
             dot={false}
           />
         </AreaChart>

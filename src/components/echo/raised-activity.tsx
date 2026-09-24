@@ -116,7 +116,7 @@ function VoicePlayer({ label, duration }: { label: string; duration?: string }) 
         </div>
         <div className="mt-3 h-px w-full bg-border">
           <div
-            className="h-full bg-foreground transition-[width] duration-150 ease-luxury"
+            className="h-full bg-accent transition-[width] duration-150 ease-luxury"
             style={{ width: `${progress}%` }}
           />
         </div>

@@ -6,10 +6,12 @@ import {
   Grid2X2,
   List,
   MessageCircle,
+  Moon,
   MoreHorizontal,
   Paperclip,
   Search,
   Send,
+  Sun,
   UploadCloud,
 } from "lucide-react";
 import { AppShell } from "./app-shell";
@@ -481,9 +483,9 @@ export function AnalyticsPage() {
                   <Area
                     type="monotone"
                     dataKey={chart.key}
-                    stroke="var(--foreground)"
+                    stroke="var(--accent)"
                     strokeWidth={1.25}
-                    fill="rgba(234,230,225,0.04)"
+                    fill="rgba(239,77,35,0.07)"
                     dot={false}
                   />
                 </AreaChart>
@@ -743,7 +745,7 @@ export function ChatsPage() {
                       <span className="mt-1 block text-xs text-muted-foreground">Active now</span>
                     </span>
                   </span>
-                  {active === g && <span className="mr-1 h-1 w-1 rounded-full bg-foreground" />}
+                  {active === g && <span className="mr-1 h-1 w-1 rounded-full bg-accent" />}
                 </button>
               ))}
           </div>
@@ -810,6 +812,46 @@ export function ChatsPage() {
 }
 
 /* ---------------- Settings ---------------- */
+function SettingsThemeToggle() {
+  const [dark, setDark] = useState(
+    () => typeof document !== "undefined" && document.documentElement.classList.contains("dark"),
+  );
+
+  const toggle = () => {
+    const next = !dark;
+    setDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    try {
+      localStorage.setItem("echo-theme", next ? "dark" : "light");
+    } catch {
+      /* storage unavailable — theme still applies for the session */
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={dark}
+      aria-label="Toggle day and night mode"
+      onClick={toggle}
+      className="group flex w-full items-center justify-between border-b border-border py-5 text-left transition-opacity duration-500 hover:opacity-70"
+    >
+      <span className="text-sm text-foreground">Theme</span>
+      <span className="relative h-7 w-[52px] shrink-0 items-center rounded-full border border-border bg-background/60 px-[3px] transition-colors duration-500 group-hover:border-ring">
+        <Sun className="pointer-events-none absolute left-[8px] top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+        <Moon className="pointer-events-none absolute right-[8px] top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+        <span
+          className={cn(
+            "block size-5 rounded-full bg-foreground shadow-[0_1px_2px_oklch(0_0_0/0.2)] transition-transform duration-500",
+            dark ? "translate-x-[24px]" : "translate-x-0",
+          )}
+        />
+      </span>
+    </button>
+  );
+}
+
 export function SettingsPage() {
   return (
     <AppShell>
@@ -856,19 +898,7 @@ export function SettingsPage() {
             <h2 className="glyph-serif mb-8 text-3xl text-foreground md:text-4xl">Appearance</h2>
           </div>
           <section data-reveal className="hairline-t py-10">
-            <button
-              type="button"
-              onClick={() => {
-                const dark = document.documentElement.classList.toggle("dark", true);
-                window.localStorage.setItem("echo-theme", "dark");
-              }}
-              className="group flex w-full items-center justify-between border-b border-border py-5 text-left transition-opacity duration-500 hover:opacity-70"
-            >
-              <span className="text-sm text-foreground">Theme</span>
-              <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                Obsidian
-              </span>
-            </button>
+            <SettingsThemeToggle />
           </section>
 
           <Button className="mt-8">Save changes</Button>

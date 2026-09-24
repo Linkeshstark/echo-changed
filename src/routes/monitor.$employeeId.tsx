@@ -1,10 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { MonitorEmployeePage } from "@/components/echo/monitor";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 export const Route = createFileRoute("/monitor/$employeeId")({
   head: ({ params }) => ({ meta: [{ title: `Monitor ${params.employeeId} — ECHO` }] }),
-  component: Page,
+  component: () => <Outlet />,
 });
-function Page() {
-  const { employeeId } = Route.useParams();
-  return <MonitorEmployeePage employeeId={employeeId} />;
-}

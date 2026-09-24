@@ -246,7 +246,7 @@ export function ToggleRow({
         className={cn(
           "grid size-5 shrink-0 place-items-center border transition-all duration-500",
           checked
-            ? "border-foreground bg-foreground text-background"
+            ? "border-accent bg-accent text-accent-foreground"
             : "border-muted-foreground/40 text-transparent",
         )}
       >

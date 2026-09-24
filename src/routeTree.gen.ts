@@ -43,8 +43,12 @@ import { Route as SubmissionsIndexRouteImport } from './routes/submissions.index
 import { Route as SubmissionsEmployeeIdRouteImport } from './routes/submissions.$employeeId'
 import { Route as TasksNewRouteImport } from './routes/tasks.new'
 import { Route as BillBookTypeNewRouteImport } from './routes/bill-book.$type.new'
+import { Route as MonitorEmployeeIdIndexRouteImport } from './routes/monitor.$employeeId.index'
+import { Route as MonitorEmployeeIdRegularTasksRouteImport } from './routes/monitor.$employeeId.regular-tasks'
 import { Route as SubmissionsEmployeeIdIndexRouteImport } from './routes/submissions.$employeeId.index'
 import { Route as SubmissionsEmployeeIdTaskIdRouteImport } from './routes/submissions.$employeeId.$taskId'
+import { Route as MonitorEmployeeIdRegularTasksIndexRouteImport } from './routes/monitor.$employeeId.regular-tasks.index'
+import { Route as MonitorEmployeeIdRegularTasksTaskIdRouteImport } from './routes/monitor.$employeeId.regular-tasks.$taskId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -216,6 +220,17 @@ const BillBookTypeNewRoute = BillBookTypeNewRouteImport.update({
   path: '/$type/new',
   getParentRoute: () => BillBookRoute,
 } as any)
+const MonitorEmployeeIdIndexRoute = MonitorEmployeeIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MonitorEmployeeIdRoute,
+} as any)
+const MonitorEmployeeIdRegularTasksRoute =
+  MonitorEmployeeIdRegularTasksRouteImport.update({
+    id: '/regular-tasks',
+    path: '/regular-tasks',
+    getParentRoute: () => MonitorEmployeeIdRoute,
+  } as any)
 const SubmissionsEmployeeIdIndexRoute =
   SubmissionsEmployeeIdIndexRouteImport.update({
     id: '/',
@@ -227,6 +242,18 @@ const SubmissionsEmployeeIdTaskIdRoute =
     id: '/$taskId',
     path: '/$taskId',
     getParentRoute: () => SubmissionsEmployeeIdRoute,
+  } as any)
+const MonitorEmployeeIdRegularTasksIndexRoute =
+  MonitorEmployeeIdRegularTasksIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => MonitorEmployeeIdRegularTasksRoute,
+  } as any)
+const MonitorEmployeeIdRegularTasksTaskIdRoute =
+  MonitorEmployeeIdRegularTasksTaskIdRouteImport.update({
+    id: '/$taskId',
+    path: '/$taskId',
+    getParentRoute: () => MonitorEmployeeIdRegularTasksRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -252,7 +279,7 @@ export interface FileRoutesByFullPath {
   '/employees/$employeeId': typeof EmployeesEmployeeIdRoute
   '/employees/new': typeof EmployeesNewRoute
   '/maintenance/new': typeof MaintenanceNewRoute
-  '/monitor/$employeeId': typeof MonitorEmployeeIdRoute
+  '/monitor/$employeeId': typeof MonitorEmployeeIdRouteWithChildren
   '/payroll/$employeeId': typeof PayrollEmployeeIdRoute
   '/raised-activity/$code': typeof RaisedActivityCodeRoute
   '/submissions/$employeeId': typeof SubmissionsEmployeeIdRouteWithChildren
@@ -264,8 +291,12 @@ export interface FileRoutesByFullPath {
   '/raised-activity/': typeof RaisedActivityIndexRoute
   '/submissions/': typeof SubmissionsIndexRoute
   '/bill-book/$type/new': typeof BillBookTypeNewRoute
+  '/monitor/$employeeId/regular-tasks': typeof MonitorEmployeeIdRegularTasksRouteWithChildren
   '/submissions/$employeeId/$taskId': typeof SubmissionsEmployeeIdTaskIdRoute
+  '/monitor/$employeeId/': typeof MonitorEmployeeIdIndexRoute
   '/submissions/$employeeId/': typeof SubmissionsEmployeeIdIndexRoute
+  '/monitor/$employeeId/regular-tasks/$taskId': typeof MonitorEmployeeIdRegularTasksTaskIdRoute
+  '/monitor/$employeeId/regular-tasks/': typeof MonitorEmployeeIdRegularTasksIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -284,7 +315,6 @@ export interface FileRoutesByTo {
   '/employees/$employeeId': typeof EmployeesEmployeeIdRoute
   '/employees/new': typeof EmployeesNewRoute
   '/maintenance/new': typeof MaintenanceNewRoute
-  '/monitor/$employeeId': typeof MonitorEmployeeIdRoute
   '/payroll/$employeeId': typeof PayrollEmployeeIdRoute
   '/raised-activity/$code': typeof RaisedActivityCodeRoute
   '/tasks/new': typeof TasksNewRoute
@@ -296,7 +326,10 @@ export interface FileRoutesByTo {
   '/submissions': typeof SubmissionsIndexRoute
   '/bill-book/$type/new': typeof BillBookTypeNewRoute
   '/submissions/$employeeId/$taskId': typeof SubmissionsEmployeeIdTaskIdRoute
+  '/monitor/$employeeId': typeof MonitorEmployeeIdIndexRoute
   '/submissions/$employeeId': typeof SubmissionsEmployeeIdIndexRoute
+  '/monitor/$employeeId/regular-tasks/$taskId': typeof MonitorEmployeeIdRegularTasksTaskIdRoute
+  '/monitor/$employeeId/regular-tasks': typeof MonitorEmployeeIdRegularTasksIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -322,7 +355,7 @@ export interface FileRoutesById {
   '/employees/$employeeId': typeof EmployeesEmployeeIdRoute
   '/employees/new': typeof EmployeesNewRoute
   '/maintenance/new': typeof MaintenanceNewRoute
-  '/monitor/$employeeId': typeof MonitorEmployeeIdRoute
+  '/monitor/$employeeId': typeof MonitorEmployeeIdRouteWithChildren
   '/payroll/$employeeId': typeof PayrollEmployeeIdRoute
   '/raised-activity/$code': typeof RaisedActivityCodeRoute
   '/submissions/$employeeId': typeof SubmissionsEmployeeIdRouteWithChildren
@@ -334,8 +367,12 @@ export interface FileRoutesById {
   '/raised-activity/': typeof RaisedActivityIndexRoute
   '/submissions/': typeof SubmissionsIndexRoute
   '/bill-book/$type/new': typeof BillBookTypeNewRoute
+  '/monitor/$employeeId/regular-tasks': typeof MonitorEmployeeIdRegularTasksRouteWithChildren
   '/submissions/$employeeId/$taskId': typeof SubmissionsEmployeeIdTaskIdRoute
+  '/monitor/$employeeId/': typeof MonitorEmployeeIdIndexRoute
   '/submissions/$employeeId/': typeof SubmissionsEmployeeIdIndexRoute
+  '/monitor/$employeeId/regular-tasks/$taskId': typeof MonitorEmployeeIdRegularTasksTaskIdRoute
+  '/monitor/$employeeId/regular-tasks/': typeof MonitorEmployeeIdRegularTasksIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -374,8 +411,12 @@ export interface FileRouteTypes {
     | '/raised-activity/'
     | '/submissions/'
     | '/bill-book/$type/new'
+    | '/monitor/$employeeId/regular-tasks'
     | '/submissions/$employeeId/$taskId'
+    | '/monitor/$employeeId/'
     | '/submissions/$employeeId/'
+    | '/monitor/$employeeId/regular-tasks/$taskId'
+    | '/monitor/$employeeId/regular-tasks/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -394,7 +435,6 @@ export interface FileRouteTypes {
     | '/employees/$employeeId'
     | '/employees/new'
     | '/maintenance/new'
-    | '/monitor/$employeeId'
     | '/payroll/$employeeId'
     | '/raised-activity/$code'
     | '/tasks/new'
@@ -406,7 +446,10 @@ export interface FileRouteTypes {
     | '/submissions'
     | '/bill-book/$type/new'
     | '/submissions/$employeeId/$taskId'
+    | '/monitor/$employeeId'
     | '/submissions/$employeeId'
+    | '/monitor/$employeeId/regular-tasks/$taskId'
+    | '/monitor/$employeeId/regular-tasks'
   id:
     | '__root__'
     | '/'
@@ -443,8 +486,12 @@ export interface FileRouteTypes {
     | '/raised-activity/'
     | '/submissions/'
     | '/bill-book/$type/new'
+    | '/monitor/$employeeId/regular-tasks'
     | '/submissions/$employeeId/$taskId'
+    | '/monitor/$employeeId/'
     | '/submissions/$employeeId/'
+    | '/monitor/$employeeId/regular-tasks/$taskId'
+    | '/monitor/$employeeId/regular-tasks/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -712,6 +759,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BillBookTypeNewRouteImport
       parentRoute: typeof BillBookRoute
     }
+    '/monitor/$employeeId/': {
+      id: '/monitor/$employeeId/'
+      path: '/'
+      fullPath: '/monitor/$employeeId/'
+      preLoaderRoute: typeof MonitorEmployeeIdIndexRouteImport
+      parentRoute: typeof MonitorEmployeeIdRoute
+    }
+    '/monitor/$employeeId/regular-tasks': {
+      id: '/monitor/$employeeId/regular-tasks'
+      path: '/regular-tasks'
+      fullPath: '/monitor/$employeeId/regular-tasks'
+      preLoaderRoute: typeof MonitorEmployeeIdRegularTasksRouteImport
+      parentRoute: typeof MonitorEmployeeIdRoute
+    }
     '/submissions/$employeeId/': {
       id: '/submissions/$employeeId/'
       path: '/'
@@ -725,6 +786,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/submissions/$employeeId/$taskId'
       preLoaderRoute: typeof SubmissionsEmployeeIdTaskIdRouteImport
       parentRoute: typeof SubmissionsEmployeeIdRoute
+    }
+    '/monitor/$employeeId/regular-tasks/': {
+      id: '/monitor/$employeeId/regular-tasks/'
+      path: '/'
+      fullPath: '/monitor/$employeeId/regular-tasks/'
+      preLoaderRoute: typeof MonitorEmployeeIdRegularTasksIndexRouteImport
+      parentRoute: typeof MonitorEmployeeIdRegularTasksRoute
+    }
+    '/monitor/$employeeId/regular-tasks/$taskId': {
+      id: '/monitor/$employeeId/regular-tasks/$taskId'
+      path: '/$taskId'
+      fullPath: '/monitor/$employeeId/regular-tasks/$taskId'
+      preLoaderRoute: typeof MonitorEmployeeIdRegularTasksTaskIdRouteImport
+      parentRoute: typeof MonitorEmployeeIdRegularTasksRoute
     }
   }
 }
@@ -757,13 +832,45 @@ const MaintenanceRouteWithChildren = MaintenanceRoute._addFileChildren(
   MaintenanceRouteChildren,
 )
 
+interface MonitorEmployeeIdRegularTasksRouteChildren {
+  MonitorEmployeeIdRegularTasksTaskIdRoute: typeof MonitorEmployeeIdRegularTasksTaskIdRoute
+  MonitorEmployeeIdRegularTasksIndexRoute: typeof MonitorEmployeeIdRegularTasksIndexRoute
+}
+
+const MonitorEmployeeIdRegularTasksRouteChildren: MonitorEmployeeIdRegularTasksRouteChildren =
+  {
+    MonitorEmployeeIdRegularTasksTaskIdRoute:
+      MonitorEmployeeIdRegularTasksTaskIdRoute,
+    MonitorEmployeeIdRegularTasksIndexRoute:
+      MonitorEmployeeIdRegularTasksIndexRoute,
+  }
+
+const MonitorEmployeeIdRegularTasksRouteWithChildren =
+  MonitorEmployeeIdRegularTasksRoute._addFileChildren(
+    MonitorEmployeeIdRegularTasksRouteChildren,
+  )
+
+interface MonitorEmployeeIdRouteChildren {
+  MonitorEmployeeIdRegularTasksRoute: typeof MonitorEmployeeIdRegularTasksRouteWithChildren
+  MonitorEmployeeIdIndexRoute: typeof MonitorEmployeeIdIndexRoute
+}
+
+const MonitorEmployeeIdRouteChildren: MonitorEmployeeIdRouteChildren = {
+  MonitorEmployeeIdRegularTasksRoute:
+    MonitorEmployeeIdRegularTasksRouteWithChildren,
+  MonitorEmployeeIdIndexRoute: MonitorEmployeeIdIndexRoute,
+}
+
+const MonitorEmployeeIdRouteWithChildren =
+  MonitorEmployeeIdRoute._addFileChildren(MonitorEmployeeIdRouteChildren)
+
 interface MonitorRouteChildren {
-  MonitorEmployeeIdRoute: typeof MonitorEmployeeIdRoute
+  MonitorEmployeeIdRoute: typeof MonitorEmployeeIdRouteWithChildren
   MonitorIndexRoute: typeof MonitorIndexRoute
 }
 
 const MonitorRouteChildren: MonitorRouteChildren = {
-  MonitorEmployeeIdRoute: MonitorEmployeeIdRoute,
+  MonitorEmployeeIdRoute: MonitorEmployeeIdRouteWithChildren,
   MonitorIndexRoute: MonitorIndexRoute,
 }
 
