@@ -12,6 +12,7 @@ import {
   Home,
   MessageSquare,
   Radar,
+  Receipt,
   RefreshCcw,
   Settings,
   TriangleAlert,
@@ -123,6 +124,7 @@ export const navSections = [
       { label: "Maintenance Chart", to: "/maintenance", icon: Wrench },
       { label: "Raised Activity", to: "/raised-activity", icon: TriangleAlert },
       { label: "Update Raised Activity", to: "/update-activity", icon: RefreshCcw },
+      { label: "Raised Voucher", to: "/raised-voucher", icon: Receipt },
     ],
   },
   {

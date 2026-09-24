@@ -16,6 +16,7 @@ import {
 import { AppShell } from "./app-shell";
 import { AssignedActivities, RaisedActivityEvents } from "./raised-activity";
 import { Eyebrow, KpiBand, Modal, PageHeader, SelectField } from "./primitives";
+import { ProfilePhotoBox, VouchersTab } from "./vouchers";
 import {
   DetailRows,
   downloadTextFile,
@@ -207,6 +208,7 @@ const tabs = [
   "Leave",
   "Documents",
   "Performance",
+  "Vouchers",
 ];
 
 const weekday = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -680,9 +682,7 @@ export function MonitorEmployeePage({ employeeId }: { employeeId: string }) {
       {/* Profile header */}
       <div data-reveal className="mb-12 grid gap-8 md:grid-cols-[220px_1fr]">
         <div>
-          <div className="grid h-44 place-items-center border border-border bg-surface">
-            <span className="glyph-serif text-6xl text-foreground/70">{initials}</span>
-          </div>
+          <ProfilePhotoBox employeeId={x.employee.id} initials={initials} />
         </div>
         <div>
           <div className="hidden grid-cols-[160px_1fr] gap-6 md:grid">
@@ -737,6 +737,7 @@ export function MonitorEmployeePage({ employeeId }: { employeeId: string }) {
         {tab === "Leave" && <LeaveTab x={x} />}
         {tab === "Documents" && <DocumentsTab x={x} />}
         {tab === "Performance" && <PerformanceTab x={x} />}
+        {tab === "Vouchers" && <VouchersTab employeeId={x.employee.id} />}
       </div>
 
       {/* Smart timeline */}

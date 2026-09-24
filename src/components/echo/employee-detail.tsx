@@ -74,6 +74,7 @@ const statusStyle: Record<string, string> = {
   "In Progress": "bg-warning",
   "Waiting Review": "bg-warning",
   Rejected: "bg-destructive",
+  Disapproved: "bg-destructive",
 };
 
 export function StatusPill({ status }: { status: string }) {

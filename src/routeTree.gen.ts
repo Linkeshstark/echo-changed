@@ -21,6 +21,7 @@ import { Route as MaintenanceRouteImport } from './routes/maintenance'
 import { Route as MonitorRouteImport } from './routes/monitor'
 import { Route as PayrollRouteImport } from './routes/payroll'
 import { Route as RaisedActivityRouteImport } from './routes/raised-activity'
+import { Route as RaisedVoucherRouteImport } from './routes/raised-voucher'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SubmissionsRouteImport } from './routes/submissions'
 import { Route as UpdateActivityRouteImport } from './routes/update-activity'
@@ -39,6 +40,8 @@ import { Route as PayrollIndexRouteImport } from './routes/payroll.index'
 import { Route as PayrollEmployeeIdRouteImport } from './routes/payroll.$employeeId'
 import { Route as RaisedActivityIndexRouteImport } from './routes/raised-activity.index'
 import { Route as RaisedActivityCodeRouteImport } from './routes/raised-activity.$code'
+import { Route as RaisedVoucherIndexRouteImport } from './routes/raised-voucher.index'
+import { Route as RaisedVoucherVoucherCodeRouteImport } from './routes/raised-voucher.$voucherCode'
 import { Route as SubmissionsIndexRouteImport } from './routes/submissions.index'
 import { Route as SubmissionsEmployeeIdRouteImport } from './routes/submissions.$employeeId'
 import { Route as TasksNewRouteImport } from './routes/tasks.new'
@@ -49,6 +52,7 @@ import { Route as SubmissionsEmployeeIdIndexRouteImport } from './routes/submiss
 import { Route as SubmissionsEmployeeIdTaskIdRouteImport } from './routes/submissions.$employeeId.$taskId'
 import { Route as MonitorEmployeeIdRegularTasksIndexRouteImport } from './routes/monitor.$employeeId.regular-tasks.index'
 import { Route as MonitorEmployeeIdRegularTasksTaskIdRouteImport } from './routes/monitor.$employeeId.regular-tasks.$taskId'
+import { Route as MonitorEmployeeIdVouchersVoucherCodeRouteImport } from './routes/monitor.$employeeId.vouchers.$voucherCode'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -108,6 +112,11 @@ const PayrollRoute = PayrollRouteImport.update({
 const RaisedActivityRoute = RaisedActivityRouteImport.update({
   id: '/raised-activity',
   path: '/raised-activity',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RaisedVoucherRoute = RaisedVoucherRouteImport.update({
+  id: '/raised-voucher',
+  path: '/raised-voucher',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -200,6 +209,17 @@ const RaisedActivityCodeRoute = RaisedActivityCodeRouteImport.update({
   path: '/$code',
   getParentRoute: () => RaisedActivityRoute,
 } as any)
+const RaisedVoucherIndexRoute = RaisedVoucherIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => RaisedVoucherRoute,
+} as any)
+const RaisedVoucherVoucherCodeRoute =
+  RaisedVoucherVoucherCodeRouteImport.update({
+    id: '/$voucherCode',
+    path: '/$voucherCode',
+    getParentRoute: () => RaisedVoucherRoute,
+  } as any)
 const SubmissionsIndexRoute = SubmissionsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -255,6 +275,12 @@ const MonitorEmployeeIdRegularTasksTaskIdRoute =
     path: '/$taskId',
     getParentRoute: () => MonitorEmployeeIdRegularTasksRoute,
   } as any)
+const MonitorEmployeeIdVouchersVoucherCodeRoute =
+  MonitorEmployeeIdVouchersVoucherCodeRouteImport.update({
+    id: '/vouchers/$voucherCode',
+    path: '/vouchers/$voucherCode',
+    getParentRoute: () => MonitorEmployeeIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -269,6 +295,7 @@ export interface FileRoutesByFullPath {
   '/monitor': typeof MonitorRouteWithChildren
   '/payroll': typeof PayrollRouteWithChildren
   '/raised-activity': typeof RaisedActivityRouteWithChildren
+  '/raised-voucher': typeof RaisedVoucherRouteWithChildren
   '/settings': typeof SettingsRoute
   '/submissions': typeof SubmissionsRouteWithChildren
   '/update-activity': typeof UpdateActivityRoute
@@ -282,6 +309,7 @@ export interface FileRoutesByFullPath {
   '/monitor/$employeeId': typeof MonitorEmployeeIdRouteWithChildren
   '/payroll/$employeeId': typeof PayrollEmployeeIdRoute
   '/raised-activity/$code': typeof RaisedActivityCodeRoute
+  '/raised-voucher/$voucherCode': typeof RaisedVoucherVoucherCodeRoute
   '/submissions/$employeeId': typeof SubmissionsEmployeeIdRouteWithChildren
   '/tasks/new': typeof TasksNewRoute
   '/bill-book/': typeof BillBookIndexRoute
@@ -289,6 +317,7 @@ export interface FileRoutesByFullPath {
   '/monitor/': typeof MonitorIndexRoute
   '/payroll/': typeof PayrollIndexRoute
   '/raised-activity/': typeof RaisedActivityIndexRoute
+  '/raised-voucher/': typeof RaisedVoucherIndexRoute
   '/submissions/': typeof SubmissionsIndexRoute
   '/bill-book/$type/new': typeof BillBookTypeNewRoute
   '/monitor/$employeeId/regular-tasks': typeof MonitorEmployeeIdRegularTasksRouteWithChildren
@@ -296,6 +325,7 @@ export interface FileRoutesByFullPath {
   '/monitor/$employeeId/': typeof MonitorEmployeeIdIndexRoute
   '/submissions/$employeeId/': typeof SubmissionsEmployeeIdIndexRoute
   '/monitor/$employeeId/regular-tasks/$taskId': typeof MonitorEmployeeIdRegularTasksTaskIdRoute
+  '/monitor/$employeeId/vouchers/$voucherCode': typeof MonitorEmployeeIdVouchersVoucherCodeRoute
   '/monitor/$employeeId/regular-tasks/': typeof MonitorEmployeeIdRegularTasksIndexRoute
 }
 export interface FileRoutesByTo {
@@ -317,18 +347,21 @@ export interface FileRoutesByTo {
   '/maintenance/new': typeof MaintenanceNewRoute
   '/payroll/$employeeId': typeof PayrollEmployeeIdRoute
   '/raised-activity/$code': typeof RaisedActivityCodeRoute
+  '/raised-voucher/$voucherCode': typeof RaisedVoucherVoucherCodeRoute
   '/tasks/new': typeof TasksNewRoute
   '/bill-book': typeof BillBookIndexRoute
   '/maintenance': typeof MaintenanceIndexRoute
   '/monitor': typeof MonitorIndexRoute
   '/payroll': typeof PayrollIndexRoute
   '/raised-activity': typeof RaisedActivityIndexRoute
+  '/raised-voucher': typeof RaisedVoucherIndexRoute
   '/submissions': typeof SubmissionsIndexRoute
   '/bill-book/$type/new': typeof BillBookTypeNewRoute
   '/submissions/$employeeId/$taskId': typeof SubmissionsEmployeeIdTaskIdRoute
   '/monitor/$employeeId': typeof MonitorEmployeeIdIndexRoute
   '/submissions/$employeeId': typeof SubmissionsEmployeeIdIndexRoute
   '/monitor/$employeeId/regular-tasks/$taskId': typeof MonitorEmployeeIdRegularTasksTaskIdRoute
+  '/monitor/$employeeId/vouchers/$voucherCode': typeof MonitorEmployeeIdVouchersVoucherCodeRoute
   '/monitor/$employeeId/regular-tasks': typeof MonitorEmployeeIdRegularTasksIndexRoute
 }
 export interface FileRoutesById {
@@ -345,6 +378,7 @@ export interface FileRoutesById {
   '/monitor': typeof MonitorRouteWithChildren
   '/payroll': typeof PayrollRouteWithChildren
   '/raised-activity': typeof RaisedActivityRouteWithChildren
+  '/raised-voucher': typeof RaisedVoucherRouteWithChildren
   '/settings': typeof SettingsRoute
   '/submissions': typeof SubmissionsRouteWithChildren
   '/update-activity': typeof UpdateActivityRoute
@@ -358,6 +392,7 @@ export interface FileRoutesById {
   '/monitor/$employeeId': typeof MonitorEmployeeIdRouteWithChildren
   '/payroll/$employeeId': typeof PayrollEmployeeIdRoute
   '/raised-activity/$code': typeof RaisedActivityCodeRoute
+  '/raised-voucher/$voucherCode': typeof RaisedVoucherVoucherCodeRoute
   '/submissions/$employeeId': typeof SubmissionsEmployeeIdRouteWithChildren
   '/tasks/new': typeof TasksNewRoute
   '/bill-book/': typeof BillBookIndexRoute
@@ -365,6 +400,7 @@ export interface FileRoutesById {
   '/monitor/': typeof MonitorIndexRoute
   '/payroll/': typeof PayrollIndexRoute
   '/raised-activity/': typeof RaisedActivityIndexRoute
+  '/raised-voucher/': typeof RaisedVoucherIndexRoute
   '/submissions/': typeof SubmissionsIndexRoute
   '/bill-book/$type/new': typeof BillBookTypeNewRoute
   '/monitor/$employeeId/regular-tasks': typeof MonitorEmployeeIdRegularTasksRouteWithChildren
@@ -372,6 +408,7 @@ export interface FileRoutesById {
   '/monitor/$employeeId/': typeof MonitorEmployeeIdIndexRoute
   '/submissions/$employeeId/': typeof SubmissionsEmployeeIdIndexRoute
   '/monitor/$employeeId/regular-tasks/$taskId': typeof MonitorEmployeeIdRegularTasksTaskIdRoute
+  '/monitor/$employeeId/vouchers/$voucherCode': typeof MonitorEmployeeIdVouchersVoucherCodeRoute
   '/monitor/$employeeId/regular-tasks/': typeof MonitorEmployeeIdRegularTasksIndexRoute
 }
 export interface FileRouteTypes {
@@ -389,6 +426,7 @@ export interface FileRouteTypes {
     | '/monitor'
     | '/payroll'
     | '/raised-activity'
+    | '/raised-voucher'
     | '/settings'
     | '/submissions'
     | '/update-activity'
@@ -402,6 +440,7 @@ export interface FileRouteTypes {
     | '/monitor/$employeeId'
     | '/payroll/$employeeId'
     | '/raised-activity/$code'
+    | '/raised-voucher/$voucherCode'
     | '/submissions/$employeeId'
     | '/tasks/new'
     | '/bill-book/'
@@ -409,6 +448,7 @@ export interface FileRouteTypes {
     | '/monitor/'
     | '/payroll/'
     | '/raised-activity/'
+    | '/raised-voucher/'
     | '/submissions/'
     | '/bill-book/$type/new'
     | '/monitor/$employeeId/regular-tasks'
@@ -416,6 +456,7 @@ export interface FileRouteTypes {
     | '/monitor/$employeeId/'
     | '/submissions/$employeeId/'
     | '/monitor/$employeeId/regular-tasks/$taskId'
+    | '/monitor/$employeeId/vouchers/$voucherCode'
     | '/monitor/$employeeId/regular-tasks/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -437,18 +478,21 @@ export interface FileRouteTypes {
     | '/maintenance/new'
     | '/payroll/$employeeId'
     | '/raised-activity/$code'
+    | '/raised-voucher/$voucherCode'
     | '/tasks/new'
     | '/bill-book'
     | '/maintenance'
     | '/monitor'
     | '/payroll'
     | '/raised-activity'
+    | '/raised-voucher'
     | '/submissions'
     | '/bill-book/$type/new'
     | '/submissions/$employeeId/$taskId'
     | '/monitor/$employeeId'
     | '/submissions/$employeeId'
     | '/monitor/$employeeId/regular-tasks/$taskId'
+    | '/monitor/$employeeId/vouchers/$voucherCode'
     | '/monitor/$employeeId/regular-tasks'
   id:
     | '__root__'
@@ -464,6 +508,7 @@ export interface FileRouteTypes {
     | '/monitor'
     | '/payroll'
     | '/raised-activity'
+    | '/raised-voucher'
     | '/settings'
     | '/submissions'
     | '/update-activity'
@@ -477,6 +522,7 @@ export interface FileRouteTypes {
     | '/monitor/$employeeId'
     | '/payroll/$employeeId'
     | '/raised-activity/$code'
+    | '/raised-voucher/$voucherCode'
     | '/submissions/$employeeId'
     | '/tasks/new'
     | '/bill-book/'
@@ -484,6 +530,7 @@ export interface FileRouteTypes {
     | '/monitor/'
     | '/payroll/'
     | '/raised-activity/'
+    | '/raised-voucher/'
     | '/submissions/'
     | '/bill-book/$type/new'
     | '/monitor/$employeeId/regular-tasks'
@@ -491,6 +538,7 @@ export interface FileRouteTypes {
     | '/monitor/$employeeId/'
     | '/submissions/$employeeId/'
     | '/monitor/$employeeId/regular-tasks/$taskId'
+    | '/monitor/$employeeId/vouchers/$voucherCode'
     | '/monitor/$employeeId/regular-tasks/'
   fileRoutesById: FileRoutesById
 }
@@ -507,6 +555,7 @@ export interface RootRouteChildren {
   MonitorRoute: typeof MonitorRouteWithChildren
   PayrollRoute: typeof PayrollRouteWithChildren
   RaisedActivityRoute: typeof RaisedActivityRouteWithChildren
+  RaisedVoucherRoute: typeof RaisedVoucherRouteWithChildren
   SettingsRoute: typeof SettingsRoute
   SubmissionsRoute: typeof SubmissionsRouteWithChildren
   UpdateActivityRoute: typeof UpdateActivityRoute
@@ -603,6 +652,13 @@ declare module '@tanstack/react-router' {
       path: '/raised-activity'
       fullPath: '/raised-activity'
       preLoaderRoute: typeof RaisedActivityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/raised-voucher': {
+      id: '/raised-voucher'
+      path: '/raised-voucher'
+      fullPath: '/raised-voucher'
+      preLoaderRoute: typeof RaisedVoucherRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -731,6 +787,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RaisedActivityCodeRouteImport
       parentRoute: typeof RaisedActivityRoute
     }
+    '/raised-voucher/': {
+      id: '/raised-voucher/'
+      path: '/'
+      fullPath: '/raised-voucher/'
+      preLoaderRoute: typeof RaisedVoucherIndexRouteImport
+      parentRoute: typeof RaisedVoucherRoute
+    }
+    '/raised-voucher/$voucherCode': {
+      id: '/raised-voucher/$voucherCode'
+      path: '/$voucherCode'
+      fullPath: '/raised-voucher/$voucherCode'
+      preLoaderRoute: typeof RaisedVoucherVoucherCodeRouteImport
+      parentRoute: typeof RaisedVoucherRoute
+    }
     '/submissions/': {
       id: '/submissions/'
       path: '/'
@@ -801,6 +871,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MonitorEmployeeIdRegularTasksTaskIdRouteImport
       parentRoute: typeof MonitorEmployeeIdRegularTasksRoute
     }
+    '/monitor/$employeeId/vouchers/$voucherCode': {
+      id: '/monitor/$employeeId/vouchers/$voucherCode'
+      path: '/vouchers/$voucherCode'
+      fullPath: '/monitor/$employeeId/vouchers/$voucherCode'
+      preLoaderRoute: typeof MonitorEmployeeIdVouchersVoucherCodeRouteImport
+      parentRoute: typeof MonitorEmployeeIdRoute
+    }
   }
 }
 
@@ -853,12 +930,15 @@ const MonitorEmployeeIdRegularTasksRouteWithChildren =
 interface MonitorEmployeeIdRouteChildren {
   MonitorEmployeeIdRegularTasksRoute: typeof MonitorEmployeeIdRegularTasksRouteWithChildren
   MonitorEmployeeIdIndexRoute: typeof MonitorEmployeeIdIndexRoute
+  MonitorEmployeeIdVouchersVoucherCodeRoute: typeof MonitorEmployeeIdVouchersVoucherCodeRoute
 }
 
 const MonitorEmployeeIdRouteChildren: MonitorEmployeeIdRouteChildren = {
   MonitorEmployeeIdRegularTasksRoute:
     MonitorEmployeeIdRegularTasksRouteWithChildren,
   MonitorEmployeeIdIndexRoute: MonitorEmployeeIdIndexRoute,
+  MonitorEmployeeIdVouchersVoucherCodeRoute:
+    MonitorEmployeeIdVouchersVoucherCodeRoute,
 }
 
 const MonitorEmployeeIdRouteWithChildren =
@@ -904,6 +984,20 @@ const RaisedActivityRouteWithChildren = RaisedActivityRoute._addFileChildren(
   RaisedActivityRouteChildren,
 )
 
+interface RaisedVoucherRouteChildren {
+  RaisedVoucherVoucherCodeRoute: typeof RaisedVoucherVoucherCodeRoute
+  RaisedVoucherIndexRoute: typeof RaisedVoucherIndexRoute
+}
+
+const RaisedVoucherRouteChildren: RaisedVoucherRouteChildren = {
+  RaisedVoucherVoucherCodeRoute: RaisedVoucherVoucherCodeRoute,
+  RaisedVoucherIndexRoute: RaisedVoucherIndexRoute,
+}
+
+const RaisedVoucherRouteWithChildren = RaisedVoucherRoute._addFileChildren(
+  RaisedVoucherRouteChildren,
+)
+
 interface SubmissionsEmployeeIdRouteChildren {
   SubmissionsEmployeeIdTaskIdRoute: typeof SubmissionsEmployeeIdTaskIdRoute
   SubmissionsEmployeeIdIndexRoute: typeof SubmissionsEmployeeIdIndexRoute
@@ -946,6 +1040,7 @@ const rootRouteChildren: RootRouteChildren = {
   MonitorRoute: MonitorRouteWithChildren,
   PayrollRoute: PayrollRouteWithChildren,
   RaisedActivityRoute: RaisedActivityRouteWithChildren,
+  RaisedVoucherRoute: RaisedVoucherRouteWithChildren,
   SettingsRoute: SettingsRoute,
   SubmissionsRoute: SubmissionsRouteWithChildren,
   UpdateActivityRoute: UpdateActivityRoute,
