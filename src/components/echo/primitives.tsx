@@ -1,4 +1,6 @@
 import {
+  useEffect,
+  useState,
   type FormEvent,
   type InputHTMLAttributes,
   type ReactNode,
@@ -6,7 +8,7 @@ import {
   type TextareaHTMLAttributes,
 } from "react";
 import { Link } from "@tanstack/react-router";
-import { Check, ChevronDown, ChevronLeft } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -20,6 +22,46 @@ export function Brand({ inverse = false }: { inverse?: boolean }) {
     >
       ECHO
     </span>
+  );
+}
+
+/* --- Day / night switch: toggles .dark and persists to echo-theme --- */
+export function ThemeToggle({ className }: { className?: string }) {
+  const [dark, setDark] = useState(
+    () => typeof document !== "undefined" && document.documentElement.classList.contains("dark"),
+  );
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle("dark", dark);
+    try {
+      localStorage.setItem("echo-theme", dark ? "dark" : "light");
+    } catch {
+      /* storage unavailable — theme still applies for the session */
+    }
+  }, [dark]);
+
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={dark}
+      aria-label="Toggle day and night mode"
+      onClick={() => setDark((d) => !d)}
+      className={cn(
+        "relative h-7 w-[52px] shrink-0 items-center rounded-full border border-border bg-background/60 px-[3px] transition-colors duration-500 hover:border-ring",
+        className,
+      )}
+    >
+      <Sun className="pointer-events-none absolute left-[8px] top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+      <Moon className="pointer-events-none absolute right-[8px] top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+      <span
+        className={cn(
+          "block size-5 rounded-full bg-foreground shadow-[0_1px_2px_oklch(0_0_0/0.2)] transition-transform duration-500",
+          dark ? "translate-x-[24px]" : "translate-x-0",
+        )}
+      />
+    </button>
   );
 }
 

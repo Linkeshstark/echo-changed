@@ -1,45 +1,9 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bell, ChevronLeft, ChevronRight, CircleUserRound, Menu, Moon, Search, Sun, X } from "lucide-react";
-import { Brand, useRevealObserver } from "./primitives";
+import { Bell, ChevronLeft, ChevronRight, CircleUserRound, Menu, Search, X } from "lucide-react";
+import { Brand, ThemeToggle, useRevealObserver } from "./primitives";
 import { navSections, searchRecords } from "@/lib/echo-data";
 import { cn } from "@/lib/utils";
-
-function ThemeToggle() {
-  const [dark, setDark] = useState(
-    () => typeof document !== "undefined" && document.documentElement.classList.contains("dark"),
-  );
-
-  useEffect(() => {
-    const root = document.documentElement;
-    root.classList.toggle("dark", dark);
-    try {
-      localStorage.setItem("echo-theme", dark ? "dark" : "light");
-    } catch {
-      /* storage unavailable — theme still applies for the session */
-    }
-  }, [dark]);
-
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={dark}
-      aria-label="Toggle light and dark mode"
-      onClick={() => setDark((d) => !d)}
-      className="relative h-7 w-[52px] shrink-0 items-center rounded-full border border-border bg-background/60 px-[3px] transition-colors duration-500 hover:border-ring"
-    >
-      <Sun className="pointer-events-none absolute left-[8px] top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-      <Moon className="pointer-events-none absolute right-[8px] top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-      <span
-        className={cn(
-          "block size-5 rounded-full bg-foreground shadow-[0_1px_2px_oklch(0_0_0/0.2)] transition-transform duration-500",
-          dark ? "translate-x-[24px]" : "translate-x-0",
-        )}
-      />
-    </button>
-  );
-}
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -102,9 +66,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             Home
           </Link>
 
-          <ThemeToggle />
-
           <div className="ml-auto flex items-center gap-1.5">
+            <ThemeToggle className="hidden sm:flex" />
             <button
               type="button"
               onClick={() => setSearchOpen(true)}

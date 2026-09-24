@@ -1,23 +1,31 @@
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import {
   Folder,
   Grid2X2,
   List,
+  LogOut,
   MessageCircle,
-  Moon,
   MoreHorizontal,
   Paperclip,
   Search,
   Send,
-  Sun,
   UploadCloud,
 } from "lucide-react";
 import { AppShell } from "./app-shell";
 import { GenerateDocModal, GeneratedDocRows } from "./bill-generate";
 import { AssignedActivities, AssignedActivitiesCount } from "./raised-activity";
-import { DataRow, Eyebrow, KpiBand, Modal, PageHeader, SelectField, TextField } from "./primitives";
+import {
+  DataRow,
+  Eyebrow,
+  KpiBand,
+  Modal,
+  PageHeader,
+  SelectField,
+  TextField,
+  ThemeToggle,
+} from "./primitives";
 import { TabBar } from "./employee-detail";
 import { Button } from "@/components/ui/button";
 import { advances, bills, employees, metrics } from "@/lib/echo-data";
@@ -812,47 +820,12 @@ export function ChatsPage() {
 }
 
 /* ---------------- Settings ---------------- */
-function SettingsThemeToggle() {
-  const [dark, setDark] = useState(
-    () => typeof document !== "undefined" && document.documentElement.classList.contains("dark"),
-  );
-
-  const toggle = () => {
-    const next = !dark;
-    setDark(next);
-    document.documentElement.classList.toggle("dark", next);
-    try {
-      localStorage.setItem("echo-theme", next ? "dark" : "light");
-    } catch {
-      /* storage unavailable — theme still applies for the session */
-    }
-  };
-
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={dark}
-      aria-label="Toggle day and night mode"
-      onClick={toggle}
-      className="group flex w-full items-center justify-between border-b border-border py-5 text-left transition-opacity duration-500 hover:opacity-70"
-    >
-      <span className="text-sm text-foreground">Theme</span>
-      <span className="relative h-7 w-[52px] shrink-0 items-center rounded-full border border-border bg-background/60 px-[3px] transition-colors duration-500 group-hover:border-ring">
-        <Sun className="pointer-events-none absolute left-[8px] top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-        <Moon className="pointer-events-none absolute right-[8px] top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-        <span
-          className={cn(
-            "block size-5 rounded-full bg-foreground shadow-[0_1px_2px_oklch(0_0_0/0.2)] transition-transform duration-500",
-            dark ? "translate-x-[24px]" : "translate-x-0",
-          )}
-        />
-      </span>
-    </button>
-  );
-}
-
 export function SettingsPage() {
+  const navigate = useNavigate();
+  const signOut = () => {
+    window.sessionStorage.removeItem("echo-session");
+    navigate({ to: "/auth" });
+  };
   return (
     <AppShell>
       <PageHeader title="Profile Settings" eyebrow="Your account" />
@@ -898,10 +871,28 @@ export function SettingsPage() {
             <h2 className="glyph-serif mb-8 text-3xl text-foreground md:text-4xl">Appearance</h2>
           </div>
           <section data-reveal className="hairline-t py-10">
-            <SettingsThemeToggle />
+            <div className="group flex w-full items-center justify-between border-b border-border py-5">
+              <span className="text-sm text-foreground">Theme</span>
+              <ThemeToggle />
+            </div>
           </section>
 
           <Button className="mt-8">Save changes</Button>
+
+          <div data-reveal className="mt-8">
+            <Eyebrow className="mb-4">03</Eyebrow>
+            <h2 className="glyph-serif mb-8 text-3xl text-foreground md:text-4xl">Session</h2>
+          </div>
+          <section data-reveal className="hairline-t py-10">
+            <button
+              type="button"
+              onClick={signOut}
+              className="group flex w-full items-center justify-between border-b border-border py-5 text-left transition-opacity duration-500 hover:opacity-70"
+            >
+              <span className="text-sm text-foreground">Sign out</span>
+              <LogOut className="size-4 text-muted-foreground" />
+            </button>
+          </section>
         </div>
       </div>
     </AppShell>
