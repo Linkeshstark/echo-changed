@@ -1,16 +1,97 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bell, ChevronLeft, ChevronRight, CircleUserRound, Menu, Search, X } from "lucide-react";
+import {
+  Banknote,
+  Bell,
+  CalendarClock,
+  ChevronLeft,
+  ChevronRight,
+  CircleUserRound,
+  ClipboardCheck,
+  HeartHandshake,
+  Menu,
+  ReceiptText,
+  Search,
+  X,
+} from "lucide-react";
 import { Brand, ThemeToggle, useRevealObserver } from "./primitives";
 import { navSections, searchRecords } from "@/lib/echo-data";
 import { cn } from "@/lib/utils";
 
+/* --- Notification bell --- */
+
+type Notification = {
+  id: string;
+  icon: ReactNode;
+  title: string;
+  detail: string;
+  at: string;
+  read: boolean;
+};
+
+const notificationSeed: Notification[] = [
+  {
+    id: "n-task",
+    icon: <ClipboardCheck className="size-4" />,
+    title: "New task assigned to Arjun Mehta",
+    detail: "Gate 2 intercom inspection · due today",
+    at: "2 min ago",
+    read: false,
+  },
+  {
+    id: "n-voucher",
+    icon: <ReceiptText className="size-4" />,
+    title: "Voucher request submitted by Ravi Kumar",
+    detail: "₹4,500 · awaiting approval",
+    at: "15 min ago",
+    read: false,
+  },
+  {
+    id: "n-maintenance",
+    icon: <CalendarClock className="size-4" />,
+    title: "Maintenance schedule created for ABC Residential",
+    detail: "Trimming · weekly on Monday, Wednesday, Friday",
+    at: "1 hour ago",
+    read: true,
+  },
+  {
+    id: "n-donation",
+    icon: <HeartHandshake className="size-4" />,
+    title: "Donation awaiting approval",
+    detail: "Vikram Desai · ₹15,000 · UPI",
+    at: "Today",
+    read: true,
+  },
+  {
+    id: "n-payroll",
+    icon: <Banknote className="size-4" />,
+    title: "Payroll updated for September",
+    detail: "18 employees · net payout ₹4,82,000",
+    at: "Yesterday",
+    read: true,
+  },
+];
+
 export function AppShell({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [alertsOpen, setAlertsOpen] = useState(false);
+  const [notifications, setNotifications] = useState(notificationSeed);
   const [query, setQuery] = useState("");
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const observeReveal = useRevealObserver();
+  const alertsRef = useRef<HTMLDivElement>(null);
+
+  const unread = notifications.filter((n) => !n.read).length;
+
+  useEffect(() => {
+    if (!alertsOpen) return;
+    const onPointerDown = (e: MouseEvent) => {
+      if (!alertsRef.current?.contains(e.target as Node)) setAlertsOpen(false);
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, [alertsOpen]);
 
   useEffect(() => {
     observeReveal();
@@ -24,6 +105,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       if (e.key === "Escape") {
         setSearchOpen(false);
         setMenuOpen(false);
+        setAlertsOpen(false);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -86,14 +168,72 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <CircleUserRound className="size-[18px]" />
             </Link>
-            <button
-              type="button"
-              aria-label="Notifications"
-              className="relative grid size-10 place-items-center text-muted-foreground transition-opacity duration-500 hover:opacity-60"
-            >
-              <Bell className="size-4" />
-              <span className="absolute right-2.5 top-2.5 size-1 rounded-full bg-accent" />
-            </button>
+            <div className="relative" ref={alertsRef}>
+              <button
+                type="button"
+                aria-label="Notifications"
+                aria-expanded={alertsOpen}
+                onClick={() => setAlertsOpen((open) => !open)}
+                className="relative grid size-10 place-items-center text-muted-foreground transition-opacity duration-500 hover:opacity-60"
+              >
+                <Bell className="size-4" />
+                {unread > 0 && (
+                  <span className="absolute right-2.5 top-2.5 size-1 rounded-full bg-accent" />
+                )}
+              </button>
+
+              {alertsOpen && (
+                <div className="fixed inset-x-5 top-[4.5rem] z-50 animate-enter border border-border bg-background sm:absolute sm:inset-x-auto sm:right-0 sm:top-[calc(100%+0.75rem)] sm:w-[22rem]">
+                  <div className="flex items-center justify-between gap-4 border-b border-border px-5 py-4">
+                    <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground/50">
+                      Notifications
+                    </p>
+                    <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground/60">
+                      {unread > 0 ? `${unread} unread` : "All read"}
+                    </p>
+                  </div>
+                  <div className="max-h-[60vh] overflow-y-auto">
+                    {notifications.map((n) => (
+                      <button
+                        key={n.id}
+                        type="button"
+                        onClick={() =>
+                          setNotifications((list) =>
+                            list.map((x) => (x.id === n.id ? { ...x, read: true } : x)),
+                          )
+                        }
+                        className="flex w-full items-start gap-4 border-b border-border py-4 text-left transition-opacity duration-500 last:border-b-0 hover:opacity-70"
+                      >
+                        <span className="mt-0.5 shrink-0 text-muted-foreground">{n.icon}</span>
+                        <span className="min-w-0 flex-1">
+                          <span
+                            className={cn(
+                              "block text-[15px]",
+                              n.read ? "text-muted-foreground" : "text-foreground",
+                            )}
+                          >
+                            {n.title}
+                          </span>
+                          <span className="mt-0.5 block text-xs text-muted-foreground">
+                            {n.detail}
+                          </span>
+                          <span className="mt-1.5 block text-[10px] uppercase tracking-[0.14em] text-muted-foreground/60">
+                            {n.at}
+                          </span>
+                        </span>
+                        <span
+                          title={n.read ? "Read" : "Unread"}
+                          className={cn(
+                            "mt-2 size-1 shrink-0 rounded-full",
+                            n.read ? "bg-transparent" : "bg-accent",
+                          )}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
             <button
               type="button"
               aria-label="Open menu"
