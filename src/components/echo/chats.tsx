@@ -92,7 +92,7 @@ export function ChatThreadPage() {
   if (!group) {
     return (
       <AppShell>
-        <PageHeader title="Group Chat" back={{ to: "/chats", label: "Group Chat" }} />
+        <PageHeader title="Group Chat" back={{ to: "/chats", label: "Back to Group Chat" }} />
         <p className="border-b border-border py-8 text-sm text-muted-foreground">
           This group is no longer available.
         </p>
@@ -160,7 +160,7 @@ export function ChatThreadPage() {
       <PageHeader
         title={group.name}
         eyebrow={`Group Chat · ${group.kind}`}
-        back={{ to: "/chats", label: "Group Chat" }}
+        back={{ to: "/chats", label: "Back to Group Chat" }}
       />
 
       <div data-reveal className="grid gap-10 lg:grid-cols-[1fr_260px]">

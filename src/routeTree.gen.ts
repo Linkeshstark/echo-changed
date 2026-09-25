@@ -29,6 +29,7 @@ import { Route as UpdateActivityRouteImport } from './routes/update-activity'
 import { Route as VaultRouteImport } from './routes/vault'
 import { Route as ActivitiesNewRouteImport } from './routes/activities.new'
 import { Route as BillBookIndexRouteImport } from './routes/bill-book.index'
+import { Route as ChatsIndexRouteImport } from './routes/chats.index'
 import { Route as ChatsGroupIdRouteImport } from './routes/chats.$groupId'
 import { Route as ClientsClientNameRouteImport } from './routes/clients.$clientName'
 import { Route as ClientsNewRouteImport } from './routes/clients.new'
@@ -157,6 +158,11 @@ const BillBookIndexRoute = BillBookIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => BillBookRoute,
+} as any)
+const ChatsIndexRoute = ChatsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ChatsRoute,
 } as any)
 const ChatsGroupIdRoute = ChatsGroupIdRouteImport.update({
   id: '/$groupId',
@@ -340,6 +346,7 @@ export interface FileRoutesByFullPath {
   '/submissions/$employeeId': typeof SubmissionsEmployeeIdRouteWithChildren
   '/tasks/new': typeof TasksNewRoute
   '/bill-book/': typeof BillBookIndexRoute
+  '/chats/': typeof ChatsIndexRoute
   '/donation/': typeof DonationIndexRoute
   '/maintenance/': typeof MaintenanceIndexRoute
   '/monitor/': typeof MonitorIndexRoute
@@ -361,7 +368,6 @@ export interface FileRoutesByTo {
   '/advances': typeof AdvancesRoute
   '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
-  '/chats': typeof ChatsRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/help': typeof HelpRoute
   '/settings': typeof SettingsRoute
@@ -380,6 +386,7 @@ export interface FileRoutesByTo {
   '/raised-voucher/$voucherCode': typeof RaisedVoucherVoucherCodeRoute
   '/tasks/new': typeof TasksNewRoute
   '/bill-book': typeof BillBookIndexRoute
+  '/chats': typeof ChatsIndexRoute
   '/donation': typeof DonationIndexRoute
   '/maintenance': typeof MaintenanceIndexRoute
   '/monitor': typeof MonitorIndexRoute
@@ -430,6 +437,7 @@ export interface FileRoutesById {
   '/submissions/$employeeId': typeof SubmissionsEmployeeIdRouteWithChildren
   '/tasks/new': typeof TasksNewRoute
   '/bill-book/': typeof BillBookIndexRoute
+  '/chats/': typeof ChatsIndexRoute
   '/donation/': typeof DonationIndexRoute
   '/maintenance/': typeof MaintenanceIndexRoute
   '/monitor/': typeof MonitorIndexRoute
@@ -482,6 +490,7 @@ export interface FileRouteTypes {
     | '/submissions/$employeeId'
     | '/tasks/new'
     | '/bill-book/'
+    | '/chats/'
     | '/donation/'
     | '/maintenance/'
     | '/monitor/'
@@ -503,7 +512,6 @@ export interface FileRouteTypes {
     | '/advances'
     | '/analytics'
     | '/auth'
-    | '/chats'
     | '/dashboard'
     | '/help'
     | '/settings'
@@ -522,6 +530,7 @@ export interface FileRouteTypes {
     | '/raised-voucher/$voucherCode'
     | '/tasks/new'
     | '/bill-book'
+    | '/chats'
     | '/donation'
     | '/maintenance'
     | '/monitor'
@@ -571,6 +580,7 @@ export interface FileRouteTypes {
     | '/submissions/$employeeId'
     | '/tasks/new'
     | '/bill-book/'
+    | '/chats/'
     | '/donation/'
     | '/maintenance/'
     | '/monitor/'
@@ -756,6 +766,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/bill-book/'
       preLoaderRoute: typeof BillBookIndexRouteImport
       parentRoute: typeof BillBookRoute
+    }
+    '/chats/': {
+      id: '/chats/'
+      path: '/'
+      fullPath: '/chats/'
+      preLoaderRoute: typeof ChatsIndexRouteImport
+      parentRoute: typeof ChatsRoute
     }
     '/chats/$groupId': {
       id: '/chats/$groupId'
@@ -972,10 +989,12 @@ const BillBookRouteWithChildren = BillBookRoute._addFileChildren(
 
 interface ChatsRouteChildren {
   ChatsGroupIdRoute: typeof ChatsGroupIdRoute
+  ChatsIndexRoute: typeof ChatsIndexRoute
 }
 
 const ChatsRouteChildren: ChatsRouteChildren = {
   ChatsGroupIdRoute: ChatsGroupIdRoute,
+  ChatsIndexRoute: ChatsIndexRoute,
 }
 
 const ChatsRouteWithChildren = ChatsRoute._addFileChildren(ChatsRouteChildren)
