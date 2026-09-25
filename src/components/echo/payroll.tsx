@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   ArrowDownToLine,
@@ -67,6 +67,7 @@ export function PayrollPage() {
                 key={row.employeeId}
                 to="/payroll/$employeeId"
                 params={{ employeeId: row.employeeId }}
+                search={{ month: undefined }}
                 className="group grid gap-2 border-b border-border py-5 transition-opacity duration-500 hover:opacity-70 md:grid-cols-[1fr_120px_140px_120px] md:items-center md:gap-8"
               >
                 <span className="flex items-center gap-4">
@@ -288,9 +289,21 @@ function PayFlow({ record }: { record: PayrollRecord }) {
 
 /* ---------------- Salary details page ---------------- */
 
-export function SalaryDetailsPage({ employeeId }: { employeeId: string }) {
+export function SalaryDetailsPage({
+  employeeId,
+  month,
+}: {
+  employeeId: string;
+  month?: string | undefined;
+}) {
   const employee = employees.find((e) => e.id === employeeId) ?? employees[0]!;
   const record = payrollOf(employee.id);
+
+  /* A notification can point at one month of the salary record. */
+  const monthRow = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (month) monthRow.current?.scrollIntoView({ block: "center" });
+  }, [month]);
 
   return (
     <AppShell>
@@ -345,8 +358,10 @@ export function SalaryDetailsPage({ employeeId }: { employeeId: string }) {
           {record.history.map((h) => (
             <div
               key={h.month}
+              ref={month === h.month ? monthRow : undefined}
               className={cn(
                 "grid gap-2 border-b border-border py-5 md:grid-cols-[1fr_140px_120px] md:items-center md:gap-6",
+                month === h.month && "bg-accent/10",
               )}
             >
               <span className="text-[15px] text-foreground">{h.month}</span>

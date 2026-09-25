@@ -1,88 +1,89 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Banknote,
   Bell,
+  Building2,
   CalendarClock,
   ChevronLeft,
   ChevronRight,
   CircleUserRound,
   ClipboardCheck,
   HeartHandshake,
+  ListChecks,
   Menu,
+  MessageCircle,
   ReceiptText,
   Search,
   X,
 } from "lucide-react";
 import { Brand, ThemeToggle, useRevealObserver } from "./primitives";
 import { navSections, searchRecords } from "@/lib/echo-data";
+import {
+  markRead,
+  restoreRead,
+  useNotifications,
+  type Notification,
+  type NotificationIcon,
+} from "@/lib/echo-notifications";
 import { cn } from "@/lib/utils";
 
 /* --- Notification bell --- */
 
-type Notification = {
-  id: string;
-  icon: ReactNode;
-  title: string;
-  detail: string;
-  at: string;
-  read: boolean;
+const notificationIcons: Record<NotificationIcon, ReactNode> = {
+  task: <ClipboardCheck className="size-4" />,
+  voucher: <ReceiptText className="size-4" />,
+  maintenance: <CalendarClock className="size-4" />,
+  activity: <ClipboardCheck className="size-4" />,
+  donation: <HeartHandshake className="size-4" />,
+  payroll: <Banknote className="size-4" />,
+  employee: <CircleUserRound className="size-4" />,
+  client: <Building2 className="size-4" />,
+  chat: <MessageCircle className="size-4" />,
+  submission: <ListChecks className="size-4" />,
 };
 
-const notificationSeed: Notification[] = [
-  {
-    id: "n-task",
-    icon: <ClipboardCheck className="size-4" />,
-    title: "New task assigned to Arjun Mehta",
-    detail: "Gate 2 intercom inspection · due today",
-    at: "2 min ago",
-    read: false,
-  },
-  {
-    id: "n-voucher",
-    icon: <ReceiptText className="size-4" />,
-    title: "Voucher request submitted by Ravi Kumar",
-    detail: "₹4,500 · awaiting approval",
-    at: "15 min ago",
-    read: false,
-  },
-  {
-    id: "n-maintenance",
-    icon: <CalendarClock className="size-4" />,
-    title: "Maintenance schedule created for ABC Residential",
-    detail: "Trimming · weekly on Monday, Wednesday, Friday",
-    at: "1 hour ago",
-    read: true,
-  },
-  {
-    id: "n-donation",
-    icon: <HeartHandshake className="size-4" />,
-    title: "Donation awaiting approval",
-    detail: "Vikram Desai · ₹15,000 · UPI",
-    at: "Today",
-    read: true,
-  },
-  {
-    id: "n-payroll",
-    icon: <Banknote className="size-4" />,
-    title: "Payroll updated for September",
-    detail: "18 employees · net payout ₹4,82,000",
-    at: "Yesterday",
-    read: true,
-  },
-];
+/** Marks the notification read, then opens the page and record it points at. */
+function useNotificationOpener() {
+  const navigate = useNavigate();
+  return (n: Notification) => {
+    markRead(n.id);
+    const { target } = n;
+    switch (target.to) {
+      case "/monitor/$employeeId":
+        navigate({ to: target.to, params: target.params, search: target.search });
+        break;
+      case "/payroll/$employeeId":
+        navigate({ to: target.to, params: target.params, search: target.search });
+        break;
+      case "/raised-voucher/$voucherCode":
+      case "/maintenance/$code":
+      case "/raised-activity/$code":
+      case "/donation/$code":
+      case "/employees/$employeeId":
+      case "/clients/$clientName":
+      case "/chats/$groupId":
+      case "/submissions/$employeeId/$taskId":
+        navigate({ to: target.to, params: target.params });
+        break;
+    }
+  };
+}
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(false);
-  const [notifications, setNotifications] = useState(notificationSeed);
   const [query, setQuery] = useState("");
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const observeReveal = useRevealObserver();
   const alertsRef = useRef<HTMLDivElement>(null);
 
+  const notifications = useNotifications();
+  const openNotification = useNotificationOpener();
   const unread = notifications.filter((n) => !n.read).length;
+
+  useEffect(restoreRead, []);
 
   useEffect(() => {
     if (!alertsOpen) return;
@@ -197,14 +198,15 @@ export function AppShell({ children }: { children: ReactNode }) {
                       <button
                         key={n.id}
                         type="button"
-                        onClick={() =>
-                          setNotifications((list) =>
-                            list.map((x) => (x.id === n.id ? { ...x, read: true } : x)),
-                          )
-                        }
+                        onClick={() => {
+                          openNotification(n);
+                          setAlertsOpen(false);
+                        }}
                         className="flex w-full items-start gap-4 border-b border-border py-4 text-left transition-opacity duration-500 last:border-b-0 hover:opacity-70"
                       >
-                        <span className="mt-0.5 shrink-0 text-muted-foreground">{n.icon}</span>
+                        <span className="mt-0.5 shrink-0 text-muted-foreground">
+                          {notificationIcons[n.icon]}
+                        </span>
                         <span className="min-w-0 flex-1">
                           <span
                             className={cn(

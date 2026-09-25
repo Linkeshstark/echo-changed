@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowRight,
   BadgeCheck,
@@ -193,7 +193,11 @@ export function MonitorPage() {
             </span>
             <span className="justify-self-end">
               <Button asChild size="sm" variant="secondary">
-                <Link to="/monitor/$employeeId" params={{ employeeId: x.employee.id }}>
+                <Link
+                  to="/monitor/$employeeId"
+                  params={{ employeeId: x.employee.id }}
+                  search={{ tab: undefined, task: undefined }}
+                >
                   View Details <ArrowRight className="size-3.5" />
                 </Link>
               </Button>
@@ -302,10 +306,25 @@ function OverviewTab({ x }: { x: EmployeeExtended }) {
   );
 }
 
-function TaskRow({ task, x }: { task: AssignedTask; x: EmployeeExtended }) {
+function TaskRow({
+  task,
+  x,
+  highlight,
+}: {
+  task: AssignedTask;
+  x: EmployeeExtended;
+  highlight?: boolean;
+}) {
   const linked = submissionReviews
     .find((s) => s.employeeId === x.employee.id)
     ?.tasks.some((t) => t.id === task.id);
+  const row = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (highlight) row.current?.scrollIntoView({ block: "center" });
+  }, [highlight]);
+  const setRow = (node: HTMLElement | null) => {
+    row.current = node;
+  };
   const inner = (
     <>
       <span className="w-16 shrink-0 text-xs tabular-nums text-muted-foreground">
@@ -325,12 +344,14 @@ function TaskRow({ task, x }: { task: AssignedTask; x: EmployeeExtended }) {
   const shared = cn(
     "flex items-center gap-6 border-b border-border py-5 transition-opacity duration-500 last:border-b-0",
     linked && "cursor-pointer hover:opacity-70",
+    highlight && "bg-accent/10",
   );
   return linked ? (
     <Link
       to="/submissions/$employeeId/$taskId"
       params={{ employeeId: x.employee.id, taskId: String(task.id) }}
       className={shared}
+      ref={setRow}
     >
       {inner}
       <span className="ml-auto flex items-center gap-6">
@@ -339,7 +360,7 @@ function TaskRow({ task, x }: { task: AssignedTask; x: EmployeeExtended }) {
       </span>
     </Link>
   ) : (
-    <div className={shared}>
+    <div className={shared} ref={setRow}>
       {inner}
       <span className={cn("ml-auto", taskTone[task.status] ?? "text-muted-foreground")}>
         {task.status}
@@ -503,7 +524,11 @@ function PayrollTab({ x }: { x: EmployeeExtended }) {
         </div>
         <div className="mt-6">
           <Button asChild variant="secondary">
-            <Link to="/payroll/$employeeId" params={{ employeeId: x.employee.id }}>
+            <Link
+              to="/payroll/$employeeId"
+              params={{ employeeId: x.employee.id }}
+              search={{ month: undefined }}
+            >
               <Wallet className="size-4" /> Pay Salary
             </Link>
           </Button>
@@ -724,9 +749,18 @@ function PerformanceTab({ x }: { x: EmployeeExtended }) {
   );
 }
 
-export function MonitorEmployeePage({ employeeId }: { employeeId: string }) {
+export function MonitorEmployeePage({
+  employeeId,
+  tab,
+  task,
+}: {
+  employeeId: string;
+  tab?: string | undefined;
+  task?: string | undefined;
+}) {
   const x = extendedOf(employeeId);
-  const [tab, setTab] = useState("Overview");
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState(() => (tab && tabs.includes(tab) ? tab : "Overview"));
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [actionMsg, setActionMsg] = useState("");
   const year = new Date().getFullYear() - new Date(x.joinDate).getFullYear();
@@ -734,6 +768,16 @@ export function MonitorEmployeePage({ employeeId }: { employeeId: string }) {
     .split(" ")
     .map((n) => n[0])
     .join("");
+
+  /* Keeps the tab in the URL so a notification can open a specific tab and record. */
+  const setTab = (next: string) => {
+    setActiveTab(next);
+    navigate({
+      to: ".",
+      search: (prev) => ({ ...prev, tab: next === "Overview" ? undefined : next }),
+      replace: true,
+    });
+  };
 
   const report = () =>
     downloadTextFile(
@@ -795,11 +839,11 @@ export function MonitorEmployeePage({ employeeId }: { employeeId: string }) {
         </div>
       </div>
 
-      <TabBar tabs={tabs} active={tab} onChange={setTab} />
+      <TabBar tabs={tabs} active={activeTab} onChange={setTab} />
 
       <div className="py-10">
-        {tab === "Overview" && <OverviewTab x={x} />}
-        {tab === "Tasks" && (
+        {activeTab === "Overview" && <OverviewTab x={x} />}
+        {activeTab === "Tasks" && (
           <div data-reveal>
             <div className="hidden grid-cols-[64px_1fr_140px] gap-6 border-b border-border py-3 lg:grid">
               <span className="eyebrow">Task</span>
@@ -810,18 +854,18 @@ export function MonitorEmployeePage({ employeeId }: { employeeId: string }) {
               {[...x.assignedTasks]
                 .sort((a, b) => b.id - a.id)
                 .map((t) => (
-                  <TaskRow key={t.id} task={t} x={x} />
+                  <TaskRow key={t.id} task={t} x={x} highlight={task === String(t.id)} />
                 ))}
             </div>
             <AssignedActivities employeeId={x.employee.id} />
           </div>
         )}
-        {tab === "Submissions" && <SubmissionsTab x={x} />}
-        {tab === "Attendance" && <AttendanceTab x={x} />}
-        {tab === "Payroll" && <PayrollTab x={x} />}
-        {tab === "Advances" && <AdvancesTab x={x} />}
-        {tab === "Leave" && <LeaveTab x={x} />}
-        {tab === "Documents" && <DocumentsTab x={x} />}
+        {activeTab === "Submissions" && <SubmissionsTab x={x} />}
+        {activeTab === "Attendance" && <AttendanceTab x={x} />}
+        {activeTab === "Payroll" && <PayrollTab x={x} />}
+        {activeTab === "Advances" && <AdvancesTab x={x} />}
+        {activeTab === "Leave" && <LeaveTab x={x} />}
+        {activeTab === "Documents" && <DocumentsTab x={x} />}
         {tab === "Performance" && <PerformanceTab x={x} />}
         {tab === "Vouchers" && <VouchersTab employeeId={x.employee.id} />}
       </div>
@@ -872,7 +916,11 @@ export function MonitorEmployeePage({ employeeId }: { employeeId: string }) {
             <CalendarDays className="size-4" /> Mark Leave
           </Button>
           <Button asChild variant="secondary" size="sm">
-            <Link to="/payroll/$employeeId" params={{ employeeId: x.employee.id }}>
+            <Link
+              to="/payroll/$employeeId"
+              params={{ employeeId: x.employee.id }}
+              search={{ month: undefined }}
+            >
               <Wallet className="size-4" /> Pay Salary
             </Link>
           </Button>

@@ -38,6 +38,7 @@ import { Route as DonationCodeRouteImport } from './routes/donation.$code'
 import { Route as EmployeesEmployeeIdRouteImport } from './routes/employees.$employeeId'
 import { Route as EmployeesNewRouteImport } from './routes/employees.new'
 import { Route as MaintenanceIndexRouteImport } from './routes/maintenance.index'
+import { Route as MaintenanceCodeRouteImport } from './routes/maintenance.$code'
 import { Route as MaintenanceNewRouteImport } from './routes/maintenance.new'
 import { Route as MonitorIndexRouteImport } from './routes/monitor.index'
 import { Route as MonitorEmployeeIdRouteImport } from './routes/monitor.$employeeId'
@@ -204,6 +205,11 @@ const MaintenanceIndexRoute = MaintenanceIndexRouteImport.update({
   path: '/',
   getParentRoute: () => MaintenanceRoute,
 } as any)
+const MaintenanceCodeRoute = MaintenanceCodeRouteImport.update({
+  id: '/$code',
+  path: '/$code',
+  getParentRoute: () => MaintenanceRoute,
+} as any)
 const MaintenanceNewRoute = MaintenanceNewRouteImport.update({
   id: '/new',
   path: '/new',
@@ -338,6 +344,7 @@ export interface FileRoutesByFullPath {
   '/donation/$code': typeof DonationCodeRoute
   '/employees/$employeeId': typeof EmployeesEmployeeIdRoute
   '/employees/new': typeof EmployeesNewRoute
+  '/maintenance/$code': typeof MaintenanceCodeRoute
   '/maintenance/new': typeof MaintenanceNewRoute
   '/monitor/$employeeId': typeof MonitorEmployeeIdRouteWithChildren
   '/payroll/$employeeId': typeof PayrollEmployeeIdRoute
@@ -380,6 +387,7 @@ export interface FileRoutesByTo {
   '/donation/$code': typeof DonationCodeRoute
   '/employees/$employeeId': typeof EmployeesEmployeeIdRoute
   '/employees/new': typeof EmployeesNewRoute
+  '/maintenance/$code': typeof MaintenanceCodeRoute
   '/maintenance/new': typeof MaintenanceNewRoute
   '/payroll/$employeeId': typeof PayrollEmployeeIdRoute
   '/raised-activity/$code': typeof RaisedActivityCodeRoute
@@ -429,6 +437,7 @@ export interface FileRoutesById {
   '/donation/$code': typeof DonationCodeRoute
   '/employees/$employeeId': typeof EmployeesEmployeeIdRoute
   '/employees/new': typeof EmployeesNewRoute
+  '/maintenance/$code': typeof MaintenanceCodeRoute
   '/maintenance/new': typeof MaintenanceNewRoute
   '/monitor/$employeeId': typeof MonitorEmployeeIdRouteWithChildren
   '/payroll/$employeeId': typeof PayrollEmployeeIdRoute
@@ -482,6 +491,7 @@ export interface FileRouteTypes {
     | '/donation/$code'
     | '/employees/$employeeId'
     | '/employees/new'
+    | '/maintenance/$code'
     | '/maintenance/new'
     | '/monitor/$employeeId'
     | '/payroll/$employeeId'
@@ -524,6 +534,7 @@ export interface FileRouteTypes {
     | '/donation/$code'
     | '/employees/$employeeId'
     | '/employees/new'
+    | '/maintenance/$code'
     | '/maintenance/new'
     | '/payroll/$employeeId'
     | '/raised-activity/$code'
@@ -572,6 +583,7 @@ export interface FileRouteTypes {
     | '/donation/$code'
     | '/employees/$employeeId'
     | '/employees/new'
+    | '/maintenance/$code'
     | '/maintenance/new'
     | '/monitor/$employeeId'
     | '/payroll/$employeeId'
@@ -830,6 +842,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MaintenanceIndexRouteImport
       parentRoute: typeof MaintenanceRoute
     }
+    '/maintenance/$code': {
+      id: '/maintenance/$code'
+      path: '/$code'
+      fullPath: '/maintenance/$code'
+      preLoaderRoute: typeof MaintenanceCodeRouteImport
+      parentRoute: typeof MaintenanceRoute
+    }
     '/maintenance/new': {
       id: '/maintenance/new'
       path: '/new'
@@ -1014,11 +1033,13 @@ const DonationRouteWithChildren = DonationRoute._addFileChildren(
 )
 
 interface MaintenanceRouteChildren {
+  MaintenanceCodeRoute: typeof MaintenanceCodeRoute
   MaintenanceNewRoute: typeof MaintenanceNewRoute
   MaintenanceIndexRoute: typeof MaintenanceIndexRoute
 }
 
 const MaintenanceRouteChildren: MaintenanceRouteChildren = {
+  MaintenanceCodeRoute: MaintenanceCodeRoute,
   MaintenanceNewRoute: MaintenanceNewRoute,
   MaintenanceIndexRoute: MaintenanceIndexRoute,
 }
