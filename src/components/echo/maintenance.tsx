@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Image as ImageIcon, X } from "lucide-react";
+import { ArrowRight, Image as ImageIcon, Trash2, X } from "lucide-react";
 import { AppShell } from "./app-shell";
 import {
   AreaField,
@@ -13,7 +13,12 @@ import {
 } from "./primitives";
 import { SectionBlock, StatusPill } from "./employee-detail";
 import { CallButton } from "./call-button";
-import { newTaskSchedule, ScheduleFields, taskScheduleSummary } from "./schedule-fields";
+import {
+  newTaskSchedule,
+  ScheduleFields,
+  taskScheduleSummary,
+  type TaskSchedule,
+} from "./schedule-fields";
 import { Button } from "@/components/ui/button";
 import { clients, employees } from "@/lib/echo-data";
 import {
@@ -181,6 +186,51 @@ const maintenanceTypes = [
   "Other (manual)",
 ];
 
+/* One repeatable line of the chart: what, how it repeats, when, and whether it is compulsory. */
+interface MaintenanceBlock {
+  key: number;
+  what: string;
+  manualWhat: string;
+  schedule: TaskSchedule;
+  time: string;
+  mandatory: boolean;
+}
+
+let blockKey = 0;
+const newBlock = (): MaintenanceBlock => ({
+  key: (blockKey += 1),
+  what: maintenanceTypes[0]!,
+  manualWhat: "",
+  schedule: newTaskSchedule(),
+  time: "",
+  mandatory: true,
+});
+
+const today = () => {
+  const now = new Date();
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  return `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+};
+
+const todayIso = () => {
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+};
+
 export function CreateMaintenancePage() {
   const navigate = useNavigate();
   const [saved, setSaved] = useState(false);
@@ -188,43 +238,44 @@ export function CreateMaintenancePage() {
   const [manualClient, setManualClient] = useState("");
   const [employee, setEmployee] = useState("");
   const [manualEmployee, setManualEmployee] = useState("");
-  const [what, setWhat] = useState(maintenanceTypes[0]!);
-  const [manualWhat, setManualWhat] = useState("");
+  const [blocks, setBlocks] = useState<MaintenanceBlock[]>([newBlock()]);
   const [description, setDescription] = useState("");
   const [site, setSite] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
   const [cost, setCost] = useState("");
   const [notes, setNotes] = useState("");
   const [before, setBefore] = useState("");
   const [after, setAfter] = useState("");
-  const [schedule, setSchedule] = useState(newTaskSchedule());
-  const [mandatory, setMandatory] = useState(true);
 
-  const resolvedWhat = what === "Other (manual)" ? manualWhat.trim() || what : what;
-  const scheduleLabel = taskScheduleSummary({ ...schedule, title: "maintenance" });
-  const scheduleNote = scheduleLabel
-    ? `${scheduleLabel}${mandatory ? " · Mandatory" : " · Optional"}`
-    : "";
+  const patchBlock = (key: number, patch: Partial<MaintenanceBlock>) =>
+    setBlocks((rows) => rows.map((row) => (row.key === key ? { ...row, ...patch } : row)));
+
+  const resolvedWhat = (block: MaintenanceBlock) =>
+    block.what === "Other (manual)" ? block.manualWhat.trim() || block.what : block.what;
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    const record = addMaintenanceRecord({
-      client: manualClient.trim() || client,
-      what: resolvedWhat,
-      description: description.trim(),
-      site: site.trim(),
-      employee: manualEmployee.trim() || employee,
-      date: date || "—",
-      time: time || "—",
-      cost: Number(cost) || 0,
-      currency: "INR",
-      notes: notes.trim(),
-      ...(before.trim() ? { before: before.trim() } : {}),
-      ...(after.trim() ? { after: after.trim() } : {}),
-      ...(scheduleNote ? { schedule: scheduleNote } : {}),
-    });
-    void record;
+    const stamp = today();
+    for (const block of blocks) {
+      const label = taskScheduleSummary({ ...block.schedule, title: "maintenance" });
+      const scheduleNote = label
+        ? `${label}${block.mandatory ? " · Mandatory" : " · Optional"}`
+        : "";
+      addMaintenanceRecord({
+        client: manualClient.trim() || client,
+        what: resolvedWhat(block),
+        description: description.trim(),
+        site: site.trim(),
+        employee: manualEmployee.trim() || employee,
+        date: stamp,
+        time: block.time || "—",
+        cost: Number(cost) || 0,
+        currency: "INR",
+        notes: notes.trim(),
+        ...(before.trim() ? { before: before.trim() } : {}),
+        ...(after.trim() ? { after: after.trim() } : {}),
+        ...(scheduleNote ? { schedule: scheduleNote } : {}),
+      });
+    }
     setSaved(true);
     window.setTimeout(() => navigate({ to: "/maintenance" }), 700);
   };
@@ -285,27 +336,91 @@ export function CreateMaintenancePage() {
         </SectionBlock>
 
         <SectionBlock eyebrow="03" title="What Maintenance?">
-          <div className="grid gap-x-16 gap-y-9 md:grid-cols-2">
-            <SelectField
-              label="What Maintenance?"
-              value={what}
-              onChange={(e) => setWhat(e.target.value)}
+          {blocks.map((block, i) => (
+            <div
+              key={block.key}
+              className={cn(i > 0 && "mt-9 border-t border-border pt-9")}
+              data-block={i + 1}
             >
-              {maintenanceTypes.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </SelectField>
-            {what === "Other (manual)" && (
-              <TextField
-                label="Describe the maintenance"
-                value={manualWhat}
-                onChange={(e) => setManualWhat(e.target.value)}
-                required
-                maxLength={140}
-              />
-            )}
+              <div className="grid gap-x-16 gap-y-9 md:grid-cols-2">
+                <SelectField
+                  label="What Maintenance?"
+                  value={block.what}
+                  onChange={(e) => patchBlock(block.key, { what: e.target.value })}
+                >
+                  {maintenanceTypes.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </SelectField>
+                {block.what === "Other (manual)" && (
+                  <TextField
+                    label="Describe the maintenance"
+                    value={block.manualWhat}
+                    onChange={(e) => patchBlock(block.key, { manualWhat: e.target.value })}
+                    required
+                    maxLength={140}
+                  />
+                )}
+              </div>
+
+              <div className="mt-9">
+                <ScheduleFields
+                  row={block.schedule}
+                  onChange={(next) => patchBlock(block.key, { schedule: next })}
+                  maxDaysPerMonth={31}
+                  weekdayContext={todayIso()}
+                  dailyHint="This maintenance repeats every day."
+                  syncDaysToDates
+                />
+              </div>
+
+              <div className="mt-6 grid items-end gap-x-16 gap-y-9 md:grid-cols-2">
+                <TextField
+                  label="Maintenance time"
+                  type="time"
+                  value={block.time}
+                  onChange={(e) => patchBlock(block.key, { time: e.target.value })}
+                  required
+                />
+                <div className={cn(block.what === "Other (manual)" && "md:col-start-2")}>
+                  <ToggleRow
+                    label="Mandatory"
+                    detail="Missed visits are flagged in the maintenance chart."
+                    checked={block.mandatory}
+                    onChange={() => patchBlock(block.key, { mandatory: !block.mandatory })}
+                  />
+                </div>
+              </div>
+
+              {i > 0 && (
+                <div className="mt-4 flex justify-end">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setBlocks((rows) => rows.filter((r) => r.key !== block.key))}
+                  >
+                    <Trash2 className="size-4" />
+                    Remove maintenance {i + 1}
+                  </Button>
+                </div>
+              )}
+            </div>
+          ))}
+
+          <div className="mt-9 flex justify-end">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setBlocks((rows) => [...rows, newBlock()])}
+            >
+              Add Another Maintenance
+            </Button>
+          </div>
+
+          <div className="mt-9 grid gap-x-16 gap-y-9 md:grid-cols-2">
             <TextField
               label="Site / location name"
               value={site}
@@ -321,20 +436,6 @@ export function CreateMaintenancePage() {
               required
               maxLength={1200}
             />
-            <TextField
-              label="Maintenance date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
-            />
-            <TextField
-              label="Maintenance time"
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              required
-            />
           </div>
         </SectionBlock>
 
@@ -345,29 +446,7 @@ export function CreateMaintenancePage() {
           </div>
         </SectionBlock>
 
-        <SectionBlock eyebrow="05" title="Scheduling">
-          <p className="mb-8 text-sm text-muted-foreground">
-            Repeats follow the same rules as employee regular tasks — daily, weekly or monthly.
-          </p>
-          <ScheduleFields
-            row={schedule}
-            onChange={setSchedule}
-            maxDaysPerMonth={31}
-            weekdayContext={date}
-            dailyHint="This maintenance repeats every day."
-            syncDaysToDates
-          />
-          <div className="mt-6">
-            <ToggleRow
-              label="Mandatory"
-              detail="Missed visits are flagged in the maintenance chart."
-              checked={mandatory}
-              onChange={() => setMandatory(!mandatory)}
-            />
-          </div>
-        </SectionBlock>
-
-        <SectionBlock eyebrow="06" title="Cost">
+        <SectionBlock eyebrow="05" title="Cost">
           <div className="grid gap-x-16 gap-y-9 md:grid-cols-2">
             <div className="relative">
               <TextField
@@ -395,7 +474,7 @@ export function CreateMaintenancePage() {
           </div>
         </SectionBlock>
 
-        <SectionBlock eyebrow="07" title="Additional notes">
+        <SectionBlock eyebrow="06" title="Additional notes">
           <AreaField
             label="Notes"
             value={notes}
