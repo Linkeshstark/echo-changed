@@ -69,6 +69,14 @@ export function taskScheduleSummary(row: TaskSchedule) {
   return "";
 }
 
+/* Weekday of a day-of-month, resolved against the month of the given date.
+   Falls back to the current month when there is no usable reference date. */
+function weekdayFor(reference: string, day: number) {
+  const parsed = reference ? new Date(`${reference}T00:00:00`) : new Date();
+  const base = Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+  return WEEKDAYS[(new Date(base.getFullYear(), base.getMonth(), day).getDay() + 6) % 7]!;
+}
+
 export function scheduleComplete(row: TaskSchedule) {
   return (
     !row.title.trim() ||
@@ -84,11 +92,19 @@ export function ScheduleFields({
   onChange,
   withTitle = false,
   titleLabel = "Task",
+  maxDaysPerMonth = 10,
+  weekdayContext,
+  dailyHint,
+  syncDaysToDates = false,
 }: {
   row: TaskSchedule;
   onChange: (next: TaskSchedule) => void;
   withTitle?: boolean;
   titleLabel?: string;
+  maxDaysPerMonth?: number;
+  weekdayContext?: string;
+  dailyHint?: string;
+  syncDaysToDates?: boolean;
 }) {
   const patch = (p: Partial<TaskSchedule>) => onChange({ ...row, ...p });
   const incomplete =
@@ -179,7 +195,7 @@ export function ScheduleFields({
               value={String(row.daysPerMonth)}
               onChange={(e) => patch({ daysPerMonth: Number(e.target.value) })}
             >
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+              {Array.from({ length: maxDaysPerMonth }, (_, i) => i + 1).map((n) => (
                 <option key={n} value={n}>
                   {n} day{n > 1 ? "s" : ""}
                 </option>
@@ -215,13 +231,16 @@ export function ScheduleFields({
                       type="checkbox"
                       className="sr-only"
                       checked={on}
-                      onChange={() =>
-                        patch({
-                          monthDates: on
-                            ? row.monthDates.filter((x) => x !== d)
-                            : [...row.monthDates, d],
-                        })
-                      }
+                      onChange={() => {
+                        const monthDates = on
+                          ? row.monthDates.filter((x) => x !== d)
+                          : [...row.monthDates, d];
+                        patch(
+                          syncDaysToDates
+                            ? { monthDates, daysPerMonth: Math.max(1, monthDates.length) }
+                            : { monthDates },
+                        );
+                      }}
                     />
                     <span className="grid h-12 cursor-pointer place-items-center text-xs tabular-nums text-current">
                       {d}
@@ -233,6 +252,15 @@ export function ScheduleFields({
             <p className="mt-3 text-xs tabular-nums text-muted-foreground">
               {row.monthDates.length} of {row.daysPerMonth} selected
             </p>
+            {weekdayContext !== undefined && row.monthDates.length > 0 && (
+              <p className="mt-2 text-xs tabular-nums text-muted-foreground">
+                {row.monthDates
+                  .slice()
+                  .sort((a, b) => a - b)
+                  .map((d) => `${d} (${weekdayFor(weekdayContext, d)})`)
+                  .join(" · ")}
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -243,6 +271,8 @@ export function ScheduleFields({
             ? `Select exactly ${row.daysPerWeek} day${row.daysPerWeek > 1 ? "s" : ""} per week to continue.`
             : `Select exactly ${row.daysPerMonth} date${row.daysPerMonth > 1 ? "s" : ""} or choose a recurring pattern.`}
         </p>
+      ) : row.frequency === "Daily" && dailyHint ? (
+        <p className="mt-5 text-sm text-muted-foreground">{dailyHint}</p>
       ) : (
         taskScheduleSummary(row) && (
           <p className="mt-5 text-xs uppercase tracking-[0.14em] text-muted-foreground">

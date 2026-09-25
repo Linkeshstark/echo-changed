@@ -349,7 +349,14 @@ export function CreateMaintenancePage() {
           <p className="mb-8 text-sm text-muted-foreground">
             Repeats follow the same rules as employee regular tasks — daily, weekly or monthly.
           </p>
-          <ScheduleFields row={schedule} onChange={setSchedule} />
+          <ScheduleFields
+            row={schedule}
+            onChange={setSchedule}
+            maxDaysPerMonth={31}
+            weekdayContext={date}
+            dailyHint="This maintenance repeats every day."
+            syncDaysToDates
+          />
           <div className="mt-6">
             <ToggleRow
               label="Mandatory"
