@@ -33,6 +33,7 @@ import { Route as ChatsGroupIdRouteImport } from './routes/chats.$groupId'
 import { Route as ClientsClientNameRouteImport } from './routes/clients.$clientName'
 import { Route as ClientsNewRouteImport } from './routes/clients.new'
 import { Route as DonationIndexRouteImport } from './routes/donation.index'
+import { Route as DonationCodeRouteImport } from './routes/donation.$code'
 import { Route as EmployeesEmployeeIdRouteImport } from './routes/employees.$employeeId'
 import { Route as EmployeesNewRouteImport } from './routes/employees.new'
 import { Route as MaintenanceIndexRouteImport } from './routes/maintenance.index'
@@ -175,6 +176,11 @@ const ClientsNewRoute = ClientsNewRouteImport.update({
 const DonationIndexRoute = DonationIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => DonationRoute,
+} as any)
+const DonationCodeRoute = DonationCodeRouteImport.update({
+  id: '/$code',
+  path: '/$code',
   getParentRoute: () => DonationRoute,
 } as any)
 const EmployeesEmployeeIdRoute = EmployeesEmployeeIdRouteImport.update({
@@ -323,6 +329,7 @@ export interface FileRoutesByFullPath {
   '/chats/$groupId': typeof ChatsGroupIdRoute
   '/clients/$clientName': typeof ClientsClientNameRoute
   '/clients/new': typeof ClientsNewRoute
+  '/donation/$code': typeof DonationCodeRoute
   '/employees/$employeeId': typeof EmployeesEmployeeIdRoute
   '/employees/new': typeof EmployeesNewRoute
   '/maintenance/new': typeof MaintenanceNewRoute
@@ -364,6 +371,7 @@ export interface FileRoutesByTo {
   '/chats/$groupId': typeof ChatsGroupIdRoute
   '/clients/$clientName': typeof ClientsClientNameRoute
   '/clients/new': typeof ClientsNewRoute
+  '/donation/$code': typeof DonationCodeRoute
   '/employees/$employeeId': typeof EmployeesEmployeeIdRoute
   '/employees/new': typeof EmployeesNewRoute
   '/maintenance/new': typeof MaintenanceNewRoute
@@ -411,6 +419,7 @@ export interface FileRoutesById {
   '/chats/$groupId': typeof ChatsGroupIdRoute
   '/clients/$clientName': typeof ClientsClientNameRoute
   '/clients/new': typeof ClientsNewRoute
+  '/donation/$code': typeof DonationCodeRoute
   '/employees/$employeeId': typeof EmployeesEmployeeIdRoute
   '/employees/new': typeof EmployeesNewRoute
   '/maintenance/new': typeof MaintenanceNewRoute
@@ -462,6 +471,7 @@ export interface FileRouteTypes {
     | '/chats/$groupId'
     | '/clients/$clientName'
     | '/clients/new'
+    | '/donation/$code'
     | '/employees/$employeeId'
     | '/employees/new'
     | '/maintenance/new'
@@ -503,6 +513,7 @@ export interface FileRouteTypes {
     | '/chats/$groupId'
     | '/clients/$clientName'
     | '/clients/new'
+    | '/donation/$code'
     | '/employees/$employeeId'
     | '/employees/new'
     | '/maintenance/new'
@@ -549,6 +560,7 @@ export interface FileRouteTypes {
     | '/chats/$groupId'
     | '/clients/$clientName'
     | '/clients/new'
+    | '/donation/$code'
     | '/employees/$employeeId'
     | '/employees/new'
     | '/maintenance/new'
@@ -773,6 +785,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DonationIndexRouteImport
       parentRoute: typeof DonationRoute
     }
+    '/donation/$code': {
+      id: '/donation/$code'
+      path: '/$code'
+      fullPath: '/donation/$code'
+      preLoaderRoute: typeof DonationCodeRouteImport
+      parentRoute: typeof DonationRoute
+    }
     '/employees/$employeeId': {
       id: '/employees/$employeeId'
       path: '/employees/$employeeId'
@@ -962,10 +981,12 @@ const ChatsRouteChildren: ChatsRouteChildren = {
 const ChatsRouteWithChildren = ChatsRoute._addFileChildren(ChatsRouteChildren)
 
 interface DonationRouteChildren {
+  DonationCodeRoute: typeof DonationCodeRoute
   DonationIndexRoute: typeof DonationIndexRoute
 }
 
 const DonationRouteChildren: DonationRouteChildren = {
+  DonationCodeRoute: DonationCodeRoute,
   DonationIndexRoute: DonationIndexRoute,
 }
 

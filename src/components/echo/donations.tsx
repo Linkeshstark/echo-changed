@@ -1,10 +1,10 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { Check, HeartHandshake, Plus, Search, X } from "lucide-react";
 import { AppShell } from "./app-shell";
 import { Eyebrow, KpiBand, Modal, PageHeader, SelectField, TextField } from "./primitives";
-import { SectionBlock, StatusPill } from "./employee-detail";
+import { DetailRows, SectionBlock, StatusPill } from "./employee-detail";
 import { Button } from "@/components/ui/button";
-import { CallButton } from "./call-button";
 import {
   addDonation,
   donationPurposes,
@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 
 export function DonationPage() {
   const donations = useDonations();
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [purpose, setPurpose] = useState("All");
   const [status, setStatus] = useState("All");
@@ -117,7 +118,16 @@ export function DonationPage() {
         {visible.map((d, i) => (
           <div
             key={d.code}
-            className="flex flex-wrap items-center justify-between gap-4 border-b border-border py-5 lg:grid lg:grid-cols-[56px_1fr_160px_170px_130px_150px_130px_200px] lg:items-center lg:gap-6"
+            role="link"
+            tabIndex={0}
+            onClick={() => navigate({ to: "/donation/$code", params: { code: d.code } })}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                navigate({ to: "/donation/$code", params: { code: d.code } });
+              }
+            }}
+            className="flex cursor-pointer flex-wrap items-center justify-between gap-4 border-b border-border py-5 transition-opacity duration-500 hover:opacity-70 lg:grid lg:grid-cols-[56px_1fr_160px_170px_130px_150px_130px_200px] lg:items-center lg:gap-6"
           >
             <span className="hidden text-xs tabular-nums text-muted-foreground lg:block">
               {String(i + 1).padStart(2, "0")}
@@ -145,7 +155,6 @@ export function DonationPage() {
               <StatusPill status={d.status} />
             </span>
             <span className="flex items-center justify-end gap-3">
-              <CallButton phone={d.phone} name={d.donor} />
               <DonationActions d={d} />
             </span>
           </div>
@@ -168,7 +177,7 @@ function DonationActions({ d }: { d: DonationRecord }) {
   if (d.status !== "Pending") {
     return (
       <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-        {d.receiptNo ? `Receipt ${d.receiptNo}` : "Reviewed"}
+        View Details →
       </span>
     );
   }
@@ -183,10 +192,24 @@ function DonationActions({ d }: { d: DonationRecord }) {
   return (
     <>
       <div className="flex items-center gap-2">
-        <Button size="sm" variant="secondary" onClick={() => setReview("Approved")}>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={(e) => {
+            e.stopPropagation();
+            setReview("Approved");
+          }}
+        >
           <Check className="size-3.5" /> Approve
         </Button>
-        <Button size="sm" variant="destructive" onClick={() => setReview("Rejected")}>
+        <Button
+          size="sm"
+          variant="destructive"
+          onClick={(e) => {
+            e.stopPropagation();
+            setReview("Rejected");
+          }}
+        >
           <X className="size-3.5" /> Reject
         </Button>
       </div>
@@ -326,5 +349,56 @@ export function DonationBreakdown() {
         ))}
       </div>
     </SectionBlock>
+  );
+}
+
+/* ---------------- Donation details ---------------- */
+
+export function DonationDetailsPage({ code }: { code: string }) {
+  const donations = useDonations();
+  const d = donations.find((x) => x.code === code);
+
+  if (!d) {
+    return (
+      <AppShell>
+        <PageHeader
+          title="Donation not found"
+          eyebrow="Donation details"
+          back={{ to: "/donation", label: "Back to Donations" }}
+        />
+        <p data-reveal className="text-sm text-muted-foreground">
+          This donation record is no longer available.
+        </p>
+      </AppShell>
+    );
+  }
+
+  const rows: Array<[string, ReactNode]> = [
+    ["Donor Name", d.donor],
+    ["Donor Code", d.code],
+    ["Email", d.email],
+    ["Phone Number", d.phone],
+    ["Purpose", d.purpose],
+    ["Donation Amount", inr(d.amount)],
+    ["Payment Mode", d.mode],
+    ["Date & Time", `${d.date}, ${d.time}`],
+    ["Approval Status", <StatusPill key="status" status={d.status} />],
+    ["Receipt Number", d.receiptNo ?? "Not issued"],
+  ];
+  if (d.purposeNote) rows.push(["Description / Notes", d.purposeNote]);
+  if (d.note) rows.push(["Admin Approval Remarks", d.note]);
+
+  return (
+    <AppShell>
+      <PageHeader
+        title={d.donor}
+        eyebrow="Donation details"
+        back={{ to: "/donation", label: "Back to Donations" }}
+      />
+
+      <div data-reveal className="mb-14">
+        <DetailRows rows={rows} />
+      </div>
+    </AppShell>
   );
 }
