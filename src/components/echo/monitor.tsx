@@ -17,6 +17,7 @@ import { AppShell } from "./app-shell";
 import { AssignedActivities, RaisedActivityEvents } from "./raised-activity";
 import { Eyebrow, KpiBand, Modal, PageHeader, SelectField } from "./primitives";
 import { ProfilePhotoBox, VouchersTab } from "./vouchers";
+import { CallButton, CallablePhone } from "./call-button";
 import {
   DetailRows,
   downloadTextFile,
@@ -42,6 +43,13 @@ import {
   type EmployeeExtended,
   type UploadedFile,
 } from "@/lib/echo-modules-data";
+import { deductionsOf, useDeductions } from "@/lib/echo-advances";
+import {
+  assignedActivitiesForEmployee,
+  averageSatisfaction,
+  employeeNameOf,
+} from "@/lib/echo-ops-data";
+import { SatisfactionReadout } from "./satisfaction";
 import { cn } from "@/lib/utils";
 
 /* ---------------- Employee Monitor dashboard ---------------- */
@@ -174,8 +182,9 @@ export function MonitorPage() {
             </span>
             <span>
               <span className="block text-[15px] text-foreground">{x.employee.name}</span>
-              <span className="mt-0.5 block text-xs text-muted-foreground">
+              <span className="mt-0.5 flex items-center gap-3 text-xs text-muted-foreground">
                 {x.employee.id} · {x.employee.role}
+                <CallButton phone={x.phone} name={x.employee.name} />
               </span>
             </span>
             <span className="text-sm text-muted-foreground">{x.employee.department}</span>
@@ -271,7 +280,7 @@ function OverviewTab({ x }: { x: EmployeeExtended }) {
     <div data-reveal className="grid gap-10 lg:grid-cols-2">
       <DetailRows
         rows={[
-          ["Phone Number", x.phone],
+          ["Phone Number", <CallablePhone key="phone" phone={x.phone} name={x.employee.name} />],
           ["Email", x.email],
           ["Aadhaar (masked)", x.aadhaarMasked],
           ["PAN (masked)", x.panMasked],
@@ -363,6 +372,12 @@ function SubmissionsTab({ x }: { x: EmployeeExtended }) {
               {t.narrative}
             </p>
           )}
+          {t.satisfaction?.rating ? (
+            <div className="mb-6">
+              <Eyebrow className="mb-3">Client satisfaction</Eyebrow>
+              <SatisfactionReadout satisfaction={t.satisfaction} />
+            </div>
+          ) : null}
           <GroupedFiles files={t.files} />
         </div>
       ))}
@@ -499,6 +514,8 @@ function PayrollTab({ x }: { x: EmployeeExtended }) {
 }
 
 function AdvancesTab({ x }: { x: EmployeeExtended }) {
+  useDeductions();
+  const cuts = deductionsOf(x.employee.id);
   const totalAdv = x.advances.reduce((s, a) => s + a.amount, 0);
   const remaining = x.advances
     .filter((a) => a.status === "Pending")
@@ -534,6 +551,38 @@ function AdvancesTab({ x }: { x: EmployeeExtended }) {
               </span>
             </div>
           ))}
+        </div>
+
+        <div className="mt-12">
+          <div className="mb-6 border-b border-border pb-4">
+            <Eyebrow className="mb-3">Update Salary</Eyebrow>
+            <h3 className="glyph-serif text-2xl text-foreground">Deductions</h3>
+          </div>
+          <div className="hidden grid-cols-[1fr_120px_120px] gap-6 border-b border-border py-3 md:grid">
+            <span className="eyebrow">Date</span>
+            <span className="eyebrow text-right">Amount</span>
+            <span className="eyebrow text-right">Status</span>
+          </div>
+          <div>
+            {cuts.length === 0 && (
+              <p className="py-6 text-sm text-muted-foreground">No deductions on record.</p>
+            )}
+            {cuts.map((d) => (
+              <div
+                key={`${d.date}-${d.time}-${d.reason}`}
+                className="grid gap-2 border-b border-border py-4 md:grid-cols-[1fr_120px_120px] md:items-center md:gap-6"
+              >
+                <span>
+                  <span className="block text-[15px] text-foreground">{d.date}</span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">{d.reason}</span>
+                </span>
+                <span className="text-[15px] text-foreground md:text-right">{d.amount}</span>
+                <span className="flex justify-end">
+                  <StatusPill status="Deducted" />
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -608,13 +657,24 @@ function DocumentsTab({ x }: { x: EmployeeExtended }) {
 
 function PerformanceTab({ x }: { x: EmployeeExtended }) {
   const p = x.performance;
+  const employeeName = employeeNameOf(x.employee.id);
+  const tasks = submissionReviews.find((s) => s.employeeId === x.employee.id)?.tasks ?? [];
+  const activities = employeeName ? assignedActivitiesForEmployee(employeeName) : [];
+  const ratedTasks = tasks.filter((t) => t.satisfaction?.rating);
+  const ratedActivities = activities.filter((a) => a.satisfaction?.rating);
+  const liveAverage = averageSatisfaction([...tasks, ...activities]);
+  const satisfactionValue = liveAverage ?? p.satisfaction;
   return (
     <div data-reveal>
       <KpiBand
         items={[
           { label: "Task Completion Rate", value: `${p.completion}%`, note: "vs target 90%" },
           { label: "On-time Completion", value: `${p.onTime}%`, note: "Time-to-close" },
-          { label: "Client Satisfaction", value: `${p.satisfaction} / 5`, note: "Rolling average" },
+          {
+            label: "Client Satisfaction",
+            value: `${satisfactionValue} / 5`,
+            note: liveAverage ? "From client ratings" : "Rolling average",
+          },
           { label: "Attendance Percentage", value: `${p.attendancePct}%`, note: "This month" },
         ]}
       />
@@ -634,6 +694,32 @@ function PerformanceTab({ x }: { x: EmployeeExtended }) {
           <MiniTrend data={p.hoursTrend} dataKey="hours" height={56} />
         </div>
       </div>
+      {ratedTasks.length + ratedActivities.length > 0 ? (
+        <div className="mt-12">
+          <div className="mb-5 border-b border-border pb-4">
+            <Eyebrow className="mb-3">Client feedback</Eyebrow>
+            <h3 className="glyph-serif text-2xl text-foreground">Satisfaction received</h3>
+          </div>
+          <div className="grid gap-8">
+            {ratedTasks.map((t) => (
+              <div key={`task-${t.id}`} className="border-b border-border pb-6">
+                <p className="mb-3 text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                  Task #{t.id} · {t.title}
+                </p>
+                <SatisfactionReadout satisfaction={t.satisfaction!} />
+              </div>
+            ))}
+            {ratedActivities.map((a) => (
+              <div key={`act-${a.code}`} className="border-b border-border pb-6">
+                <p className="mb-3 text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                  {a.ticket} · {a.problem}
+                </p>
+                <SatisfactionReadout satisfaction={a.satisfaction!} />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

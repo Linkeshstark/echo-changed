@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { BadgeIndianRupee, Download, FileSliders, ReceiptText, Stamp } from "lucide-react";
+import { BadgeIndianRupee, Download, FileSliders, ReceiptText, Stamp, Truck } from "lucide-react";
 import { AppShell } from "./app-shell";
 import { Eyebrow, Modal, PageHeader, SaveBar, SelectField, TextField } from "./primitives";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ export const DOC_ROUTE: Record<DocType, string> = {
   Invoice: "invoice",
   Bill: "bill",
   Voucher: "voucher",
+  "Delivery Challan": "delivery-challan",
 };
 
 export function docTypeOfRoute(route: string): DocType {
@@ -135,6 +136,11 @@ export function GenerateDocModal({ open, onClose }: { open: boolean; onClose: ()
     { type: "Invoice", icon: ReceiptText, desc: "Tax invoice for services rendered" },
     { type: "Bill", icon: Stamp, desc: "Service bill / work bill" },
     { type: "Voucher", icon: BadgeIndianRupee, desc: "Payment voucher for a transaction" },
+    {
+      type: "Delivery Challan",
+      icon: Truck,
+      desc: "Goods delivery challan for a dispatch",
+    },
   ];
   return (
     <Modal open={open} onClose={onClose} title="Generate" eyebrow="Bill Book">

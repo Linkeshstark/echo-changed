@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import { Brand, TextField } from "./primitives";
 import { Button } from "@/components/ui/button";
+import { DEFAULT_OPERATOR_NAME, storeOperatorName } from "@/lib/echo-session";
 import blue from "@/assets/echo-glass-blue.jpg";
 import titanium from "@/assets/echo-titanium.jpg";
 import orbit from "@/assets/echo-orbit.jpg";
@@ -20,7 +21,10 @@ export function AuthPage() {
   }, []);
   const submit = (e: FormEvent) => {
     e.preventDefault();
+    const form = new FormData(e.currentTarget as HTMLFormElement);
+    const name = String(form.get("name") ?? "").trim() || DEFAULT_OPERATOR_NAME;
     window.sessionStorage.setItem("echo-session", "demo");
+    storeOperatorName(name);
     navigate({ to: "/dashboard" });
   };
   return (
@@ -67,22 +71,20 @@ export function AuthPage() {
         </h1>
         <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
           {mode === "signin"
-            ? "Enter your credentials to open ECHO."
+            ? "Enter your credentials to open ECHO. Any name, email and password work in this demo."
             : "Create the administrator account for your organisation."}
         </p>
 
         <form onSubmit={submit} className="mt-12 space-y-9">
+          <TextField label="Name" name="name" autoComplete="name" required maxLength={100} />
           {mode === "signup" && (
-            <>
-              <TextField label="Full name" autoComplete="name" required maxLength={100} />
-              <TextField
-                label="Mobile number"
-                type="tel"
-                autoComplete="tel"
-                required
-                maxLength={15}
-              />
-            </>
+            <TextField
+              label="Mobile number"
+              type="tel"
+              autoComplete="tel"
+              required
+              maxLength={15}
+            />
           )}
           <TextField
             label="Email address"
@@ -97,7 +99,7 @@ export function AuthPage() {
               type={show ? "text" : "password"}
               autoComplete={mode === "signin" ? "current-password" : "new-password"}
               required
-              minLength={6}
+              minLength={4}
               maxLength={100}
             />
             <button

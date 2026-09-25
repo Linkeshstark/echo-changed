@@ -12,9 +12,17 @@ import {
 import { AppShell } from "./app-shell";
 import { DataRow, Eyebrow, KpiBand, Modal, PageHeader } from "./primitives";
 import { DetailRows, downloadTextFile, StatusPill } from "./employee-detail";
+import { CallButton, CallablePhone } from "./call-button";
 import { Button } from "@/components/ui/button";
 import { employees } from "@/lib/echo-data";
-import { finalPayable, inr, payroll, payrollOf, type PayrollRecord } from "@/lib/echo-modules-data";
+import {
+  employeePhoneOf,
+  finalPayable,
+  inr,
+  payroll,
+  payrollOf,
+  type PayrollRecord,
+} from "@/lib/echo-modules-data";
 import { cn } from "@/lib/utils";
 
 /* ---------------- Payroll dashboard ---------------- */
@@ -66,6 +74,7 @@ export function PayrollPage() {
                   <span className="text-[15px] text-foreground">
                     {employee?.name ?? row.employeeId}
                   </span>
+                  <CallButton phone={employeePhoneOf(row.employeeId)} name={employee?.name} />
                 </span>
                 <span className="text-sm text-muted-foreground">{row.employeeId}</span>
                 <span className="text-[15px] text-foreground">{inr(row.monthly)}</span>
@@ -296,6 +305,14 @@ export function SalaryDetailsPage({ employeeId }: { employeeId: string }) {
           rows={[
             ["Employee Name", employee.name],
             ["Employee ID", employee.id],
+            [
+              "Phone Number",
+              <CallablePhone
+                key="phone"
+                phone={employeePhoneOf(employee.id)}
+                name={employee.name}
+              />,
+            ],
             ["Department", record.department],
             ["Monthly Salary", inr(record.monthly)],
             ["Attendance", record.attendance],

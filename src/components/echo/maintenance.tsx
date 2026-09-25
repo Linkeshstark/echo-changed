@@ -2,8 +2,18 @@ import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, Image as ImageIcon, X } from "lucide-react";
 import { AppShell } from "./app-shell";
-import { AreaField, Eyebrow, PageHeader, SaveBar, SelectField, TextField } from "./primitives";
+import {
+  AreaField,
+  Eyebrow,
+  PageHeader,
+  SaveBar,
+  SelectField,
+  TextField,
+  ToggleRow,
+} from "./primitives";
 import { SectionBlock, StatusPill } from "./employee-detail";
+import { CallButton } from "./call-button";
+import { newTaskSchedule, ScheduleFields, taskScheduleSummary } from "./schedule-fields";
 import { Button } from "@/components/ui/button";
 import { clients, employees } from "@/lib/echo-data";
 import {
@@ -12,7 +22,13 @@ import {
   maintenanceRecords,
   type MaintenanceRecord,
 } from "@/lib/echo-ops-data";
+import { employeeByName, employeePhoneOf } from "@/lib/echo-modules-data";
 import { cn } from "@/lib/utils";
+
+const phoneForName = (name: string) => {
+  const id = employeeByName(name)?.id;
+  return id ? employeePhoneOf(id) : undefined;
+};
 
 const maintenanceTone: Record<string, string> = {
   Pending: "text-warning",
@@ -35,11 +51,20 @@ function MaintenanceRow({ m }: { m: MaintenanceRecord }) {
       >
         {m.client}
       </Link>
+      <span className="hidden lg:block">
+        <CallButton phone={clientProfile(m.client).phone} name={m.client} />
+      </span>
       <span className="min-w-0">
         <span className="block text-[15px] text-foreground">{m.what}</span>
-        <span className="mt-0.5 block text-xs text-muted-foreground">{m.site}</span>
+        <span className="mt-0.5 block text-xs text-muted-foreground">
+          {m.site}
+          {m.schedule ? ` · ${m.schedule}` : ""}
+        </span>
       </span>
-      <span className="hidden text-sm text-muted-foreground lg:block">{m.employee}</span>
+      <span className="hidden items-center gap-3 text-sm text-muted-foreground lg:flex">
+        {m.employee}
+        <CallButton phone={phoneForName(m.employee)} name={m.employee} />
+      </span>
       <span className="hidden text-sm text-muted-foreground md:block">{m.date}</span>
       <span className="hidden text-sm text-muted-foreground md:block">{m.time}</span>
       <span className="hidden text-sm text-foreground lg:block md:text-right">
@@ -148,28 +173,45 @@ function PhotoUpload({
 
 /* ---------------- Create Maintenance ---------------- */
 
+const maintenanceTypes = [
+  "Daily Sweeping Inside Garden",
+  "Watering the Garden",
+  "Bio Fertiliser",
+  "Trimming",
+  "Other (manual)",
+];
+
 export function CreateMaintenancePage() {
   const navigate = useNavigate();
   const [saved, setSaved] = useState(false);
   const [client, setClient] = useState("");
   const [manualClient, setManualClient] = useState("");
-  const [what, setWhat] = useState("");
-  const [description, setDescription] = useState("");
-  const [site, setSite] = useState("");
   const [employee, setEmployee] = useState("");
   const [manualEmployee, setManualEmployee] = useState("");
+  const [what, setWhat] = useState(maintenanceTypes[0]!);
+  const [manualWhat, setManualWhat] = useState("");
+  const [description, setDescription] = useState("");
+  const [site, setSite] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [cost, setCost] = useState("");
   const [notes, setNotes] = useState("");
   const [before, setBefore] = useState("");
   const [after, setAfter] = useState("");
+  const [schedule, setSchedule] = useState(newTaskSchedule());
+  const [mandatory, setMandatory] = useState(true);
+
+  const resolvedWhat = what === "Other (manual)" ? manualWhat.trim() || what : what;
+  const scheduleLabel = taskScheduleSummary({ ...schedule, title: "maintenance" });
+  const scheduleNote = scheduleLabel
+    ? `${scheduleLabel}${mandatory ? " · Mandatory" : " · Optional"}`
+    : "";
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const record = addMaintenanceRecord({
       client: manualClient.trim() || client,
-      what: what.trim(),
+      what: resolvedWhat,
       description: description.trim(),
       site: site.trim(),
       employee: manualEmployee.trim() || employee,
@@ -180,6 +222,7 @@ export function CreateMaintenancePage() {
       notes: notes.trim(),
       ...(before.trim() ? { before: before.trim() } : {}),
       ...(after.trim() ? { after: after.trim() } : {}),
+      ...(scheduleNote ? { schedule: scheduleNote } : {}),
     });
     void record;
     setSaved(true);
@@ -218,30 +261,8 @@ export function CreateMaintenancePage() {
           </div>
         </SectionBlock>
 
-        <SectionBlock eyebrow="02" title="Maintenance details">
+        <SectionBlock eyebrow="02" title="Employee">
           <div className="grid gap-x-16 gap-y-9 md:grid-cols-2">
-            <TextField
-              label="What maintenance is being performed?"
-              value={what}
-              onChange={(e) => setWhat(e.target.value)}
-              required
-              maxLength={140}
-            />
-            <TextField
-              label="Site / location name"
-              value={site}
-              onChange={(e) => setSite(e.target.value)}
-              required
-              maxLength={140}
-            />
-            <AreaField
-              label="Maintenance description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="md:col-span-2"
-              required
-              maxLength={1200}
-            />
             <SelectField
               label="Assign employee"
               value={manualEmployee ? "" : employee}
@@ -260,6 +281,46 @@ export function CreateMaintenancePage() {
               onChange={(e) => setManualEmployee(e.target.value)}
               maxLength={100}
             />
+          </div>
+        </SectionBlock>
+
+        <SectionBlock eyebrow="03" title="What Maintenance?">
+          <div className="grid gap-x-16 gap-y-9 md:grid-cols-2">
+            <SelectField
+              label="What Maintenance?"
+              value={what}
+              onChange={(e) => setWhat(e.target.value)}
+            >
+              {maintenanceTypes.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </SelectField>
+            {what === "Other (manual)" && (
+              <TextField
+                label="Describe the maintenance"
+                value={manualWhat}
+                onChange={(e) => setManualWhat(e.target.value)}
+                required
+                maxLength={140}
+              />
+            )}
+            <TextField
+              label="Site / location name"
+              value={site}
+              onChange={(e) => setSite(e.target.value)}
+              required
+              maxLength={140}
+            />
+            <AreaField
+              label="Maintenance description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="md:col-span-2"
+              required
+              maxLength={1200}
+            />
             <TextField
               label="Maintenance date"
               type="date"
@@ -277,14 +338,29 @@ export function CreateMaintenancePage() {
           </div>
         </SectionBlock>
 
-        <SectionBlock eyebrow="03" title="Photos">
+        <SectionBlock eyebrow="04" title="Photos">
           <div className="grid gap-x-16 gap-y-9 md:grid-cols-2">
             <PhotoUpload label="Before Photo" value={before} onChange={setBefore} />
             <PhotoUpload label="After Photo" value={after} onChange={setAfter} />
           </div>
         </SectionBlock>
 
-        <SectionBlock eyebrow="04" title="Cost">
+        <SectionBlock eyebrow="05" title="Scheduling">
+          <p className="mb-8 text-sm text-muted-foreground">
+            Repeats follow the same rules as employee regular tasks — daily, weekly or monthly.
+          </p>
+          <ScheduleFields row={schedule} onChange={setSchedule} />
+          <div className="mt-6">
+            <ToggleRow
+              label="Mandatory"
+              detail="Missed visits are flagged in the maintenance chart."
+              checked={mandatory}
+              onChange={() => setMandatory(!mandatory)}
+            />
+          </div>
+        </SectionBlock>
+
+        <SectionBlock eyebrow="06" title="Cost">
           <div className="grid gap-x-16 gap-y-9 md:grid-cols-2">
             <div className="relative">
               <TextField
@@ -312,7 +388,7 @@ export function CreateMaintenancePage() {
           </div>
         </SectionBlock>
 
-        <SectionBlock eyebrow="05" title="Additional notes">
+        <SectionBlock eyebrow="07" title="Additional notes">
           <AreaField
             label="Notes"
             value={notes}

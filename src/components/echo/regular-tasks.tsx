@@ -1,5 +1,15 @@
 import { Link } from "@tanstack/react-router";
-import { BadgeCheck, BarChart2, CalendarDays, ClipboardCheck, Clock, Eye, ListChecks, Repeat, XCircle } from "lucide-react";
+import {
+  BadgeCheck,
+  BarChart2,
+  CalendarDays,
+  ClipboardCheck,
+  Clock,
+  Eye,
+  ListChecks,
+  Repeat,
+  XCircle,
+} from "lucide-react";
 import { AppShell } from "./app-shell";
 import { Eyebrow, PageHeader } from "./primitives";
 import { SectionBlock, StatusPill } from "./employee-detail";
@@ -52,7 +62,9 @@ export function RegularTasksPage({ employeeId }: { employeeId: string }) {
       <section data-reveal className="hairline-t mb-10 flex flex-wrap gap-x-16 gap-y-8 pb-10">
         <div>
           <p className="eyebrow mb-2">Completion</p>
-          <p className="glyph-serif text-4xl text-foreground">{summary.completionRate.toFixed(0)}%</p>
+          <p className="glyph-serif text-4xl text-foreground">
+            {summary.completionRate.toFixed(0)}%
+          </p>
           <p className="mt-1 text-sm text-muted-foreground">
             {summary.completed} of {summary.completed + summary.missed} finished
           </p>
@@ -95,7 +107,15 @@ export function RegularTasksPage({ employeeId }: { employeeId: string }) {
   );
 }
 
-function TaskRow({ task, index, employeeId }: { task: RegularTaskAssignment; index: number; employeeId: string }) {
+function TaskRow({
+  task,
+  index,
+  employeeId,
+}: {
+  task: RegularTaskAssignment;
+  index: number;
+  employeeId: string;
+}) {
   const status = regularTaskStatus(employeeId, task.id);
   return (
     <div className="grid gap-4 border-b border-border py-5 lg:grid-cols-[60px_1fr_150px_200px_150px_120px] lg:items-center lg:gap-6">
@@ -104,19 +124,29 @@ function TaskRow({ task, index, employeeId }: { task: RegularTaskAssignment; ind
         <p className="truncate text-[15px] text-foreground">{task.title}</p>
         <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">{task.description}</p>
       </div>
-      <span className={cn("text-sm uppercase tracking-[0.14em]", taskTone[task.frequency])}>{task.frequency}</span>
+      <span className={cn("text-sm uppercase tracking-[0.14em]", taskTone[task.frequency])}>
+        {task.frequency}
+      </span>
       <span className="inline-flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
         <Repeat className="size-3.5" /> {scheduleSummary(task)}
       </span>
       <div className="flex flex-wrap items-center gap-x- sosyal gap-2">
         <StatusPill status={task.status} />
-        <span className={cn("text-sm tabular-nums", stateTone[status.occurrences.length ? "Pending" : "NotScheduled"])}>
+        <span
+          className={cn(
+            "text-sm tabular-nums",
+            stateTone[status.occurrences.length ? "Pending" : "NotScheduled"],
+          )}
+        >
           {status.completionRate.toFixed(0)}%
         </span>
       </div>
       <span className="flex justify-end lg:justify-start">
         <Button asChild variant="ghost" size="sm">
-          <Link to="/monitor/$employeeId/regular-tasks/$taskId" params={{ employeeId, taskId: task.id }}>
+          <Link
+            to="/monitor/$employeeId/regular-tasks/$taskId"
+            params={{ employeeId, taskId: task.id }}
+          >
             <Eye className="size-4" /> View Details
           </Link>
         </Button>
@@ -127,7 +157,13 @@ function TaskRow({ task, index, employeeId }: { task: RegularTaskAssignment; ind
 
 /* ---------------- Tracking — a single regular task's history ---------------- */
 
-export function RegularTaskDetailPage({ employeeId, taskId }: { employeeId: string; taskId: string }) {
+export function RegularTaskDetailPage({
+  employeeId,
+  taskId,
+}: {
+  employeeId: string;
+  taskId: string;
+}) {
   const status = regularTaskStatus(employeeId, taskId);
   const task = status.task;
   const initials = employeeNameOfTaskTracking(employeeId)
@@ -154,13 +190,19 @@ export function RegularTaskDetailPage({ employeeId, taskId }: { employeeId: stri
               <span className="glyph-serif text-lg">{initials}</span>
             </div>
             <div>
-              <p className="text-[15px] text-foreground">{employeeNameOfTaskTracking(employeeId)}</p>
-              <p className="text-sm text-muted-foreground">{task.frequency} · assigned {task.assignedDate}</p>
+              <p className="text-[15px] text-foreground">
+                {employeeNameOfTaskTracking(employeeId)}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {task.frequency} · assigned {task.assignedDate}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <StatusPill status={task.status} />
-            <span className={cn("text-sm tabular-nums text-foreground")}>{status.completionRate.toFixed(0)}% rate</span>
+            <span className={cn("text-sm tabular-nums text-foreground")}>
+              {status.completionRate.toFixed(0)}% rate
+            </span>
           </div>
         </div>
       </section>
@@ -180,7 +222,10 @@ export function RegularTaskDetailPage({ employeeId, taskId }: { employeeId: stri
               <p className="text-sm text-foreground">{scheduleSummary(task)}</p>
               <ul className="mt-3 flex flex-wrap gap-2">
                 {scheduleDisplay(task).map((s) => (
-                  <li key={s} className="hairline-border rounded-full px-3 py-1 text-xs text-muted-foreground">
+                  <li
+                    key={s}
+                    className="hairline-border rounded-full px-3 py-1 text-xs text-muted-foreground"
+                  >
                     {s}
                   </li>
                 ))}
@@ -196,7 +241,9 @@ export function RegularTaskDetailPage({ employeeId, taskId }: { employeeId: stri
 
       <SectionBlock eyebrow="Occurrence log" title="How the last weeks went">
         {status.occurrences.length === 0 ? (
-          <p className="py-10 text-sm text-muted-foreground">No occurrences in the tracking window.</p>
+          <p className="py-10 text-sm text-muted-foreground">
+            No occurrences in the tracking window.
+          </p>
         ) : (
           <div>
             <div className="hidden grid-cols-[96px_64px_1fr_130px_110px] gap-6 border-b border-border py-3 lg:grid">
@@ -233,7 +280,10 @@ export function RegularTaskDetailPage({ employeeId, taskId }: { employeeId: stri
         <SectionBlock eyebrow="History" title="Completed & missed">
           <ul className="space-y-0">
             {status.history.map((h) => (
-              <li key={`${h.iso}-${h.title}`} className="hairline-b flex items-center justify-between gap-6 py-4">
+              <li
+                key={`${h.iso}-${h.title}`}
+                className="hairline-b flex items-center justify-between gap-6 py-4"
+              >
                 <div className="min-w-0">
                   <p className="text-sm text-foreground">{h.title}</p>
                   <p className="mt-0.5 text-xs text-muted-foreground">{h.label}</p>
@@ -257,7 +307,9 @@ function OccurrenceRow({ o }: { o: RegularTaskOccurrence }) {
       <span className="flex items-center gap-2 text-sm text-muted-foreground">
         <span className={cn("size-1.5 rounded-full", stateDot(o.state))} />
         <span className={cn("text-foreground", stateTone[o.state])}>{o.state}</span>
-        {o.completedAt && <span className="hidden text-xs tabular-nums md:inline">{o.completedAt}</span>}
+        {o.completedAt && (
+          <span className="hidden text-xs tabular-nums md:inline">{o.completedAt}</span>
+        )}
       </span>
       <span className="text-sm tabular-nums text-muted-foreground">{o.expectedTime}</span>
       <span className="flex justify-end text-sm text-foreground lg:justify-start">

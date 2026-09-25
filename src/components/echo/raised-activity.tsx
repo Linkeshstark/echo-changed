@@ -17,17 +17,22 @@ import {
 import { AppShell } from "./app-shell";
 import { AreaField, Eyebrow, PageHeader, SelectField, TextField } from "./primitives";
 import { SectionBlock, StatusPill } from "./employee-detail";
+import { CallButton, CallablePhone } from "./call-button";
+import { StarRating, SatisfactionReadout } from "./satisfaction";
 import { Button } from "@/components/ui/button";
 import { employees } from "@/lib/echo-data";
+import { employeeByName, employeePhoneOf } from "@/lib/echo-modules-data";
 import {
   activityStatuses,
   assignedActivitiesForEmployee,
   clientProfile,
+  closedStatuses,
   currentIssuesForClient,
   employeeNameOf,
   findActivity,
   maintenanceForClient,
   raisedActivities,
+  recordSatisfaction,
   raisedActivityForClient,
   resolvedIssuesForClient,
   updateActivity,
@@ -38,6 +43,11 @@ import {
 import { cn } from "@/lib/utils";
 
 /* ---------------- Status tones ---------------- */
+
+const phoneForName = (name: string) => {
+  const id = employeeByName(name)?.id;
+  return id ? employeePhoneOf(id) : undefined;
+};
 
 const activityTone: Record<string, string> = {
   Raised: "text-warning",
@@ -52,10 +62,16 @@ const activityTone: Record<string, string> = {
   Reopened: "text-destructive",
 };
 
-const priorityTone: Record<string, string> = {
-  High: "text-destructive",
-  Medium: "text-warning",
-  Low: "text-muted-foreground",
+const localPriorityTone: Record<string, string> = {
+  "High Priority": "text-destructive",
+  Priority: "text-warning",
+  Normal: "text-muted-foreground",
+};
+
+const localPriorityDot: Record<string, string> = {
+  "High Priority": "bg-destructive",
+  Priority: "bg-warning",
+  Normal: "bg-muted-foreground",
 };
 
 export function ActivityStatusPill({ status }: { status: string }) {
@@ -68,6 +84,23 @@ export function ActivityStatusPill({ status }: { status: string }) {
     >
       <span className="size-1.5 rounded-full bg-current" />
       {status}
+    </span>
+  );
+}
+
+/* High Priority — red · Priority — orange · Normal — grey. */
+export function ActivityPriorityPill({ priority }: { priority: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em]",
+        localPriorityTone[priority] ?? "text-muted-foreground",
+      )}
+    >
+      <span
+        className={cn("size-1.5 rounded-full", localPriorityDot[priority] ?? "bg-muted-foreground")}
+      />
+      {priority}
     </span>
   );
 }
@@ -239,7 +272,7 @@ export function RaisedActivityPage() {
 
       <div className="hidden grid-cols-[48px_120px_1fr_1fr_1fr_130px_110px_150px] gap-6 border-b border-border py-3 lg:grid">
         <span className="eyebrow">No.</span>
-        <span className="eyebrow">Code</span>
+        <span className="eyebrow">Ticket</span>
         <span className="eyebrow">Client</span>
         <span className="eyebrow">Site</span>
         <span className="eyebrow">Problem</span>
@@ -259,21 +292,30 @@ export function RaisedActivityPage() {
             className="grid gap-3 border-b border-border py-5 lg:grid-cols-[48px_120px_1fr_1fr_1fr_130px_110px_150px] lg:items-center lg:gap-6"
           >
             <span className="text-xs tabular-nums text-muted-foreground">{i + 1}</span>
-            <span className="text-[15px] text-foreground">{a.code}</span>
-            <Link
-              to="/clients/$clientName"
-              params={{ clientName: a.client }}
-              className={cn(
-                "w-max text-[15px] text-foreground",
-                clientProfile(a.client).code !== "CL-NEW" &&
-                  "transition-opacity duration-500 hover:opacity-60",
-              )}
-            >
-              {a.client}
-            </Link>
+            <span>
+              <span className="block text-[15px] text-foreground">{a.ticket}</span>
+              <span className="mt-0.5 block text-xs text-muted-foreground">{a.code}</span>
+            </span>
+            <span className="flex items-center gap-3">
+              <Link
+                to="/clients/$clientName"
+                params={{ clientName: a.client }}
+                className={cn(
+                  "w-max text-[15px] text-foreground",
+                  clientProfile(a.client).code !== "CL-NEW" &&
+                    "transition-opacity duration-500 hover:opacity-60",
+                )}
+              >
+                {a.client}
+              </Link>
+              <CallButton phone={clientProfile(a.client).phone} name={a.client} />
+            </span>
             <span className="text-sm text-muted-foreground">{a.site}</span>
             <span className="min-w-0">
               <span className="block truncate text-sm text-foreground">{a.problem}</span>
+              <span className="mt-1 block lg:hidden">
+                <ActivityPriorityPill priority={a.priority} />
+              </span>
             </span>
             <span className="text-sm tabular-nums text-muted-foreground">
               {a.raisedDate}
@@ -315,12 +357,12 @@ export function RaisedActivityDetailsPage({ code }: { code: string }) {
     );
   }
   const profile = clientProfile(activity.client);
-  const priority = priorityTone[activity.priority] ?? "text-muted-foreground";
+  const settled = closedStatuses.includes(activity.status);
   return (
     <AppShell>
       <PageHeader
         title="Raised Activity Details"
-        eyebrow={activity.code}
+        eyebrow={`${activity.ticket} · ${activity.code}`}
         back={{ to: "/raised-activity", label: "Raised Activity" }}
       />
 
@@ -330,14 +372,7 @@ export function RaisedActivityDetailsPage({ code }: { code: string }) {
           <p className="glyph-serif text-4xl text-foreground md:text-5xl">{activity.status}</p>
         </div>
         <div className="flex items-center gap-6 text-sm">
-          <span
-            className={cn(
-              "inline-flex items-center gap-2 uppercase tracking-[0.16em] text-xs",
-              priority,
-            )}
-          >
-            <span className="size-1.5 rounded-full bg-current" /> {activity.priority} priority
-          </span>
+          <ActivityPriorityPill priority={activity.priority} />
           {activity.assignee && (
             <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
               Assigned to {activity.assignee}
@@ -346,6 +381,28 @@ export function RaisedActivityDetailsPage({ code }: { code: string }) {
         </div>
       </div>
 
+      <SectionBlock eyebrow="Ticket" title="Activity reference">
+        <div className="grid gap-x-16 gap-y-6 lg:grid-cols-[1fr_1fr]">
+          {(
+            [
+              ["Ticket ID", activity.ticket],
+              ["Activity Code", activity.code],
+              ["Priority", activity.priority],
+              ["Raised On", `${activity.raisedDate} · ${activity.raisedTime}`],
+            ] as Array<[string, string]>
+          ).map(([k, v]) => (
+            <div key={k} className="hairline-b flex items-center justify-between gap-6 py-4">
+              <span className="text-sm text-muted-foreground">{k}</span>
+              {k === "Priority" ? (
+                <ActivityPriorityPill priority={v} />
+              ) : (
+                <span className="text-[15px] text-foreground">{v}</span>
+              )}
+            </div>
+          ))}
+        </div>
+      </SectionBlock>
+
       <SectionBlock eyebrow="Client information" title="Who raised this">
         <div className="grid gap-x-16 gap-y-6 lg:grid-cols-[1fr_1fr]">
           {(
@@ -353,9 +410,6 @@ export function RaisedActivityDetailsPage({ code }: { code: string }) {
               ["Client Name", activity.client],
               ["Company Name", profile.company],
               ["Client Code", profile.code],
-              ["Phone", profile.phone],
-              ["Email", profile.email],
-              ["GSTIN", profile.gst],
             ] as Array<[string, string]>
           ).map(([k, v]) => (
             <div key={k} className="hairline-b flex items-center justify-between gap-6 py-4">
@@ -363,6 +417,18 @@ export function RaisedActivityDetailsPage({ code }: { code: string }) {
               <span className="text-[15px] text-foreground">{v}</span>
             </div>
           ))}
+          <div className="hairline-b flex items-center justify-between gap-6 py-4">
+            <span className="text-sm text-muted-foreground">Phone</span>
+            <CallablePhone phone={profile.phone} name={profile.name} />
+          </div>
+          <div className="hairline-b flex items-center justify-between gap-6 py-4">
+            <span className="text-sm text-muted-foreground">Email</span>
+            <span className="text-[15px] text-foreground">{profile.email}</span>
+          </div>
+          <div className="hairline-b flex items-center justify-between gap-6 py-4">
+            <span className="text-sm text-muted-foreground">GSTIN</span>
+            <span className="text-[15px] text-foreground">{profile.gst}</span>
+          </div>
         </div>
       </SectionBlock>
 
@@ -377,8 +443,10 @@ export function RaisedActivityDetailsPage({ code }: { code: string }) {
           </div>
           <div className="border-b border-border py-4 lg:border-b-0 lg:border-l lg:pl-10">
             <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">Contact</p>
-            <p className="mt-2 flex items-center gap-2 text-sm text-foreground">
-              <Phone className="size-3.5" /> {profile.phone}
+            <p className="mt-2 flex items-center gap-3 text-sm text-foreground">
+              <Phone className="size-3.5" />
+              {profile.phone}
+              <CallButton phone={profile.phone} name={profile.name} />
             </p>
             <p className="mt-1 flex items-center gap-2 text-sm text-foreground">
               <Building2 className="size-3.5" /> {profile.company}
@@ -429,6 +497,14 @@ export function RaisedActivityDetailsPage({ code }: { code: string }) {
         <ActivityTimeline activity={activity} />
       </SectionBlock>
 
+      {settled ? (
+        <ActivitySatisfaction activity={activity} reviewer={profile.name} />
+      ) : activity.satisfaction?.rating ? (
+        <SectionBlock eyebrow="Client satisfaction" title="Service rating">
+          <SatisfactionReadout satisfaction={activity.satisfaction} className="max-w-2xl" />
+        </SectionBlock>
+      ) : null}
+
       <div className="mt-4 flex flex-wrap gap-3">
         <Button asChild variant="secondary">
           <Link to="/update-activity">
@@ -440,6 +516,63 @@ export function RaisedActivityDetailsPage({ code }: { code: string }) {
         </Button>
       </div>
     </AppShell>
+  );
+}
+
+/* ---------------- Client satisfaction on a settled activity ---------------- */
+
+function ActivitySatisfaction({
+  activity,
+  reviewer,
+}: {
+  activity: RaisedActivity;
+  reviewer: string;
+}) {
+  const [rating, setRating] = useState(activity.satisfaction?.rating ?? 0);
+  const [comment, setComment] = useState(activity.satisfaction?.comment ?? "");
+  const [saved, setSaved] = useState(false);
+
+  const rate = (value: number) => {
+    setRating(value);
+    recordSatisfaction(activity, value, comment, reviewer);
+    setSaved(true);
+  };
+
+  return (
+    <SectionBlock eyebrow="Client satisfaction" title="Rate the resolved activity">
+      <div className="max-w-2xl border border-border bg-surface px-5 py-6">
+        <StarRating value={rating} onChange={rate} />
+        <textarea
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          rows={3}
+          placeholder="Add the client’s comment about the service…"
+          className="mt-5 w-full resize-y border-b border-border bg-transparent py-3 text-[15px] leading-relaxed text-foreground outline-none placeholder:text-muted-foreground/60"
+        />
+        <Button
+          className="mt-6"
+          disabled={!rating}
+          onClick={() => {
+            recordSatisfaction(activity, rating, comment, reviewer);
+            setSaved(true);
+          }}
+        >
+          Save Satisfaction
+        </Button>
+        {saved && activity.satisfaction?.rating ? (
+          <p className="mt-4 text-xs uppercase tracking-[0.16em] text-muted-foreground">
+            Saved — {activity.satisfaction.rating}/5 recorded
+          </p>
+        ) : null}
+        {activity.satisfaction?.rating ? (
+          <SatisfactionReadout
+            satisfaction={activity.satisfaction}
+            className="mt-6 border-t border-border pt-6"
+            showComment={false}
+          />
+        ) : null}
+      </div>
+    </SectionBlock>
   );
 }
 
@@ -688,6 +821,7 @@ export function UpdateActivityPage() {
 export function AssignedActivities({ employeeId }: { employeeId: string }) {
   const name = employeeNameOf(employeeId);
   const list = name ? assignedActivitiesForEmployee(name) : [];
+  const phone = employeePhoneOf(employeeId);
   if (list.length === 0) return null;
   return (
     <div className="mt-10">
@@ -707,14 +841,16 @@ export function AssignedActivities({ employeeId }: { employeeId: string }) {
                 params={{ code: a.code }}
                 className="text-[15px] text-foreground transition-opacity duration-500 hover:opacity-60"
               >
-                {a.code} — {a.problem}
+                {a.ticket} — {a.problem}
               </Link>
               <p className="mt-1 text-xs text-muted-foreground">
                 {a.client} · {a.site} · {a.raisedTime}, {a.raisedDate}
+                {a.satisfaction?.rating ? ` · Client rated ${a.satisfaction.rating}/5` : ""}
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-5">
               <ActivityStatusPill status={a.status} />
+              <CallButton phone={phone} name={name ?? undefined} />
               <ArrowRight className="size-4 text-muted-foreground/60" />
             </div>
           </div>
@@ -755,7 +891,7 @@ export function RaisedActivityEvents({ employeeId }: { employeeId: string }) {
               params={{ code: a.code }}
               className="text-[15px] text-foreground transition-opacity duration-500 hover:opacity-60"
             >
-              {a.code} — {a.problem}
+              {a.ticket} — {a.problem}
             </Link>
             <ActivityStatusPill status={a.status} />
           </div>
@@ -785,6 +921,7 @@ export function ClientPortalPage({ clientName }: { clientName: string }) {
   const current = currentIssuesForClient(profile.name);
   const resolved = resolvedIssuesForClient(profile.name);
   const maintenance = maintenanceForClient(profile.name);
+  const rated = raised.filter((a) => a.satisfaction?.rating);
 
   return (
     <AppShell>
@@ -798,7 +935,19 @@ export function ClientPortalPage({ clientName }: { clientName: string }) {
             [
               ["Client Code", profile.code],
               ["Company Name", profile.company],
-              ["Phone", profile.phone],
+            ] as Array<[string, string]>
+          ).map(([k, v]) => (
+            <div key={k} className="hairline-b flex items-center justify-between gap-6 py-4">
+              <span className="text-sm text-muted-foreground">{k}</span>
+              <span className="text-[15px] text-foreground">{v}</span>
+            </div>
+          ))}
+          <div className="hairline-b flex items-center justify-between gap-6 py-4">
+            <span className="text-sm text-muted-foreground">Phone</span>
+            <CallablePhone phone={profile.phone} name={profile.name} />
+          </div>
+          {(
+            [
               ["Email", profile.email],
               ["Address", profile.address],
               ["GSTIN", profile.gst],
@@ -806,7 +955,7 @@ export function ClientPortalPage({ clientName }: { clientName: string }) {
           ).map(([k, v]) => (
             <div key={k} className="hairline-b flex items-center justify-between gap-6 py-4">
               <span className="text-sm text-muted-foreground">{k}</span>
-              <span className="text-right text-[15px] text-foreground">{v}</span>
+              <span className="text-[15px] text-foreground">{v}</span>
             </div>
           ))}
         </div>
@@ -817,8 +966,8 @@ export function ClientPortalPage({ clientName }: { clientName: string }) {
           <p className="text-sm text-muted-foreground">No activities raised by this client.</p>
         ) : (
           <div>
-            <div className="hidden grid-cols-[100px_1fr_130px_140px] gap-6 border-b border-border py-3 md:grid">
-              <span className="eyebrow">Code</span>
+            <div className="hidden grid-cols-[120px_1fr_130px_140px] gap-6 border-b border-border py-3 md:grid">
+              <span className="eyebrow">Ticket</span>
               <span className="eyebrow">Problem</span>
               <span className="eyebrow">Raised</span>
               <span className="eyebrow text-right">Status</span>
@@ -826,14 +975,14 @@ export function ClientPortalPage({ clientName }: { clientName: string }) {
             {raised.map((a) => (
               <div
                 key={a.code}
-                className="grid gap-2 border-b border-border py-5 md:grid-cols-[100px_1fr_130px_140px] md:items-center md:gap-6"
+                className="grid gap-2 border-b border-border py-5 md:grid-cols-[120px_1fr_130px_140px] md:items-center md:gap-6"
               >
                 <Link
                   to="/raised-activity/$code"
                   params={{ code: a.code }}
                   className="w-max text-[15px] text-foreground transition-opacity duration-500 hover:opacity-60"
                 >
-                  {a.code}
+                  {a.ticket}
                 </Link>
                 <span className="text-sm text-foreground">{a.problem}</span>
                 <span className="text-sm tabular-nums text-muted-foreground">
@@ -867,7 +1016,10 @@ export function ClientPortalPage({ clientName }: { clientName: string }) {
               >
                 <span className="text-xs tabular-nums text-muted-foreground">{m.code}</span>
                 <span className="text-[15px] text-foreground">{m.what}</span>
-                <span className="text-sm text-muted-foreground">{m.employee}</span>
+                <span className="flex items-center gap-3 text-sm text-muted-foreground">
+                  {m.employee}
+                  <CallButton phone={phoneForName(m.employee)} name={m.employee} />
+                </span>
                 <span className="text-sm tabular-nums text-muted-foreground md:text-right">
                   {m.date}
                 </span>
@@ -879,6 +1031,24 @@ export function ClientPortalPage({ clientName }: { clientName: string }) {
           </div>
         )}
       </SectionBlock>
+
+      {rated.length > 0 ? (
+        <SectionBlock eyebrow="Client satisfaction" title="Service rating">
+          <div className="max-w-2xl">
+            <SatisfactionReadout
+              satisfaction={{
+                rating:
+                  Math.round(
+                    (rated.reduce((n, a) => n + (a.satisfaction?.rating ?? 0), 0) / rated.length) *
+                      10,
+                  ) / 10,
+                comment: `${rated.length} of ${raised.length} closed activities rated by the client.`,
+                ratedBy: "Client feedback",
+              }}
+            />
+          </div>
+        </SectionBlock>
+      ) : null}
 
       <SectionBlock eyebrow="Issues breakout" title="Current vs resolved">
         <div className="grid gap-x-16 lg:grid-cols-2">
@@ -896,8 +1066,11 @@ export function ClientPortalPage({ clientName }: { clientName: string }) {
                   className="hairline-b flex items-center justify-between gap-6 py-5 transition-opacity duration-500 hover:opacity-60"
                 >
                   <span className="text-[15px] text-foreground">
-                    {a.code}
-                    <span className="ml-3 block text-sm text-muted-foreground">{a.problem}</span>
+                    {a.ticket}
+                    <span className="ml-3 block text-sm text-muted-foreground">
+                      {a.problem}
+                      {a.satisfaction?.rating ? ` · Rated ${a.satisfaction.rating}/5` : ""}
+                    </span>
                   </span>
                   <ActivityStatusPill status={a.status} />
                 </Link>
@@ -918,8 +1091,11 @@ export function ClientPortalPage({ clientName }: { clientName: string }) {
                   className="hairline-b flex items-center justify-between gap-6 py-5 transition-opacity duration-500 hover:opacity-60"
                 >
                   <span className="text-[15px] text-foreground">
-                    {a.code}
-                    <span className="ml-3 block text-sm text-muted-foreground">{a.problem}</span>
+                    {a.ticket}
+                    <span className="ml-3 block text-sm text-muted-foreground">
+                      {a.problem}
+                      {a.satisfaction?.rating ? ` · Rated ${a.satisfaction.rating}/5` : ""}
+                    </span>
                   </span>
                   <ActivityStatusPill status={a.status} />
                 </Link>

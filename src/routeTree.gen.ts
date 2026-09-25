@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BillBookRouteImport } from './routes/bill-book'
 import { Route as ChatsRouteImport } from './routes/chats'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as DonationRouteImport } from './routes/donation'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as MaintenanceRouteImport } from './routes/maintenance'
 import { Route as MonitorRouteImport } from './routes/monitor'
@@ -28,8 +29,10 @@ import { Route as UpdateActivityRouteImport } from './routes/update-activity'
 import { Route as VaultRouteImport } from './routes/vault'
 import { Route as ActivitiesNewRouteImport } from './routes/activities.new'
 import { Route as BillBookIndexRouteImport } from './routes/bill-book.index'
+import { Route as ChatsGroupIdRouteImport } from './routes/chats.$groupId'
 import { Route as ClientsClientNameRouteImport } from './routes/clients.$clientName'
 import { Route as ClientsNewRouteImport } from './routes/clients.new'
+import { Route as DonationIndexRouteImport } from './routes/donation.index'
 import { Route as EmployeesEmployeeIdRouteImport } from './routes/employees.$employeeId'
 import { Route as EmployeesNewRouteImport } from './routes/employees.new'
 import { Route as MaintenanceIndexRouteImport } from './routes/maintenance.index'
@@ -87,6 +90,11 @@ const ChatsRoute = ChatsRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DonationRoute = DonationRouteImport.update({
+  id: '/donation',
+  path: '/donation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HelpRoute = HelpRouteImport.update({
@@ -149,6 +157,11 @@ const BillBookIndexRoute = BillBookIndexRouteImport.update({
   path: '/',
   getParentRoute: () => BillBookRoute,
 } as any)
+const ChatsGroupIdRoute = ChatsGroupIdRouteImport.update({
+  id: '/$groupId',
+  path: '/$groupId',
+  getParentRoute: () => ChatsRoute,
+} as any)
 const ClientsClientNameRoute = ClientsClientNameRouteImport.update({
   id: '/clients/$clientName',
   path: '/clients/$clientName',
@@ -158,6 +171,11 @@ const ClientsNewRoute = ClientsNewRouteImport.update({
   id: '/clients/new',
   path: '/clients/new',
   getParentRoute: () => rootRouteImport,
+} as any)
+const DonationIndexRoute = DonationIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DonationRoute,
 } as any)
 const EmployeesEmployeeIdRoute = EmployeesEmployeeIdRouteImport.update({
   id: '/employees/$employeeId',
@@ -288,8 +306,9 @@ export interface FileRoutesByFullPath {
   '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
   '/bill-book': typeof BillBookRouteWithChildren
-  '/chats': typeof ChatsRoute
+  '/chats': typeof ChatsRouteWithChildren
   '/dashboard': typeof DashboardRoute
+  '/donation': typeof DonationRouteWithChildren
   '/help': typeof HelpRoute
   '/maintenance': typeof MaintenanceRouteWithChildren
   '/monitor': typeof MonitorRouteWithChildren
@@ -301,6 +320,7 @@ export interface FileRoutesByFullPath {
   '/update-activity': typeof UpdateActivityRoute
   '/vault': typeof VaultRoute
   '/activities/new': typeof ActivitiesNewRoute
+  '/chats/$groupId': typeof ChatsGroupIdRoute
   '/clients/$clientName': typeof ClientsClientNameRoute
   '/clients/new': typeof ClientsNewRoute
   '/employees/$employeeId': typeof EmployeesEmployeeIdRoute
@@ -313,6 +333,7 @@ export interface FileRoutesByFullPath {
   '/submissions/$employeeId': typeof SubmissionsEmployeeIdRouteWithChildren
   '/tasks/new': typeof TasksNewRoute
   '/bill-book/': typeof BillBookIndexRoute
+  '/donation/': typeof DonationIndexRoute
   '/maintenance/': typeof MaintenanceIndexRoute
   '/monitor/': typeof MonitorIndexRoute
   '/payroll/': typeof PayrollIndexRoute
@@ -333,13 +354,14 @@ export interface FileRoutesByTo {
   '/advances': typeof AdvancesRoute
   '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
-  '/chats': typeof ChatsRoute
+  '/chats': typeof ChatsRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/help': typeof HelpRoute
   '/settings': typeof SettingsRoute
   '/update-activity': typeof UpdateActivityRoute
   '/vault': typeof VaultRoute
   '/activities/new': typeof ActivitiesNewRoute
+  '/chats/$groupId': typeof ChatsGroupIdRoute
   '/clients/$clientName': typeof ClientsClientNameRoute
   '/clients/new': typeof ClientsNewRoute
   '/employees/$employeeId': typeof EmployeesEmployeeIdRoute
@@ -350,6 +372,7 @@ export interface FileRoutesByTo {
   '/raised-voucher/$voucherCode': typeof RaisedVoucherVoucherCodeRoute
   '/tasks/new': typeof TasksNewRoute
   '/bill-book': typeof BillBookIndexRoute
+  '/donation': typeof DonationIndexRoute
   '/maintenance': typeof MaintenanceIndexRoute
   '/monitor': typeof MonitorIndexRoute
   '/payroll': typeof PayrollIndexRoute
@@ -371,8 +394,9 @@ export interface FileRoutesById {
   '/analytics': typeof AnalyticsRoute
   '/auth': typeof AuthRoute
   '/bill-book': typeof BillBookRouteWithChildren
-  '/chats': typeof ChatsRoute
+  '/chats': typeof ChatsRouteWithChildren
   '/dashboard': typeof DashboardRoute
+  '/donation': typeof DonationRouteWithChildren
   '/help': typeof HelpRoute
   '/maintenance': typeof MaintenanceRouteWithChildren
   '/monitor': typeof MonitorRouteWithChildren
@@ -384,6 +408,7 @@ export interface FileRoutesById {
   '/update-activity': typeof UpdateActivityRoute
   '/vault': typeof VaultRoute
   '/activities/new': typeof ActivitiesNewRoute
+  '/chats/$groupId': typeof ChatsGroupIdRoute
   '/clients/$clientName': typeof ClientsClientNameRoute
   '/clients/new': typeof ClientsNewRoute
   '/employees/$employeeId': typeof EmployeesEmployeeIdRoute
@@ -396,6 +421,7 @@ export interface FileRoutesById {
   '/submissions/$employeeId': typeof SubmissionsEmployeeIdRouteWithChildren
   '/tasks/new': typeof TasksNewRoute
   '/bill-book/': typeof BillBookIndexRoute
+  '/donation/': typeof DonationIndexRoute
   '/maintenance/': typeof MaintenanceIndexRoute
   '/monitor/': typeof MonitorIndexRoute
   '/payroll/': typeof PayrollIndexRoute
@@ -421,6 +447,7 @@ export interface FileRouteTypes {
     | '/bill-book'
     | '/chats'
     | '/dashboard'
+    | '/donation'
     | '/help'
     | '/maintenance'
     | '/monitor'
@@ -432,6 +459,7 @@ export interface FileRouteTypes {
     | '/update-activity'
     | '/vault'
     | '/activities/new'
+    | '/chats/$groupId'
     | '/clients/$clientName'
     | '/clients/new'
     | '/employees/$employeeId'
@@ -444,6 +472,7 @@ export interface FileRouteTypes {
     | '/submissions/$employeeId'
     | '/tasks/new'
     | '/bill-book/'
+    | '/donation/'
     | '/maintenance/'
     | '/monitor/'
     | '/payroll/'
@@ -471,6 +500,7 @@ export interface FileRouteTypes {
     | '/update-activity'
     | '/vault'
     | '/activities/new'
+    | '/chats/$groupId'
     | '/clients/$clientName'
     | '/clients/new'
     | '/employees/$employeeId'
@@ -481,6 +511,7 @@ export interface FileRouteTypes {
     | '/raised-voucher/$voucherCode'
     | '/tasks/new'
     | '/bill-book'
+    | '/donation'
     | '/maintenance'
     | '/monitor'
     | '/payroll'
@@ -503,6 +534,7 @@ export interface FileRouteTypes {
     | '/bill-book'
     | '/chats'
     | '/dashboard'
+    | '/donation'
     | '/help'
     | '/maintenance'
     | '/monitor'
@@ -514,6 +546,7 @@ export interface FileRouteTypes {
     | '/update-activity'
     | '/vault'
     | '/activities/new'
+    | '/chats/$groupId'
     | '/clients/$clientName'
     | '/clients/new'
     | '/employees/$employeeId'
@@ -526,6 +559,7 @@ export interface FileRouteTypes {
     | '/submissions/$employeeId'
     | '/tasks/new'
     | '/bill-book/'
+    | '/donation/'
     | '/maintenance/'
     | '/monitor/'
     | '/payroll/'
@@ -548,8 +582,9 @@ export interface RootRouteChildren {
   AnalyticsRoute: typeof AnalyticsRoute
   AuthRoute: typeof AuthRoute
   BillBookRoute: typeof BillBookRouteWithChildren
-  ChatsRoute: typeof ChatsRoute
+  ChatsRoute: typeof ChatsRouteWithChildren
   DashboardRoute: typeof DashboardRoute
+  DonationRoute: typeof DonationRouteWithChildren
   HelpRoute: typeof HelpRoute
   MaintenanceRoute: typeof MaintenanceRouteWithChildren
   MonitorRoute: typeof MonitorRouteWithChildren
@@ -617,6 +652,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/donation': {
+      id: '/donation'
+      path: '/donation'
+      fullPath: '/donation'
+      preLoaderRoute: typeof DonationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/help': {
@@ -703,6 +745,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BillBookIndexRouteImport
       parentRoute: typeof BillBookRoute
     }
+    '/chats/$groupId': {
+      id: '/chats/$groupId'
+      path: '/$groupId'
+      fullPath: '/chats/$groupId'
+      preLoaderRoute: typeof ChatsGroupIdRouteImport
+      parentRoute: typeof ChatsRoute
+    }
     '/clients/$clientName': {
       id: '/clients/$clientName'
       path: '/clients/$clientName'
@@ -716,6 +765,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/clients/new'
       preLoaderRoute: typeof ClientsNewRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/donation/': {
+      id: '/donation/'
+      path: '/'
+      fullPath: '/donation/'
+      preLoaderRoute: typeof DonationIndexRouteImport
+      parentRoute: typeof DonationRoute
     }
     '/employees/$employeeId': {
       id: '/employees/$employeeId'
@@ -895,6 +951,28 @@ const BillBookRouteWithChildren = BillBookRoute._addFileChildren(
   BillBookRouteChildren,
 )
 
+interface ChatsRouteChildren {
+  ChatsGroupIdRoute: typeof ChatsGroupIdRoute
+}
+
+const ChatsRouteChildren: ChatsRouteChildren = {
+  ChatsGroupIdRoute: ChatsGroupIdRoute,
+}
+
+const ChatsRouteWithChildren = ChatsRoute._addFileChildren(ChatsRouteChildren)
+
+interface DonationRouteChildren {
+  DonationIndexRoute: typeof DonationIndexRoute
+}
+
+const DonationRouteChildren: DonationRouteChildren = {
+  DonationIndexRoute: DonationIndexRoute,
+}
+
+const DonationRouteWithChildren = DonationRoute._addFileChildren(
+  DonationRouteChildren,
+)
+
 interface MaintenanceRouteChildren {
   MaintenanceNewRoute: typeof MaintenanceNewRoute
   MaintenanceIndexRoute: typeof MaintenanceIndexRoute
@@ -1033,8 +1111,9 @@ const rootRouteChildren: RootRouteChildren = {
   AnalyticsRoute: AnalyticsRoute,
   AuthRoute: AuthRoute,
   BillBookRoute: BillBookRouteWithChildren,
-  ChatsRoute: ChatsRoute,
+  ChatsRoute: ChatsRouteWithChildren,
   DashboardRoute: DashboardRoute,
+  DonationRoute: DonationRouteWithChildren,
   HelpRoute: HelpRoute,
   MaintenanceRoute: MaintenanceRouteWithChildren,
   MonitorRoute: MonitorRouteWithChildren,

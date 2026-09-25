@@ -2,6 +2,7 @@ import { useMemo, useRef, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { AppShell } from "./app-shell";
 import { Eyebrow, PageHeader, SelectField } from "./primitives";
+import { PassportCropper } from "./photo-crop";
 import { SectionBlock, StatusPill } from "./employee-detail";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +17,6 @@ import {
   voucherReasons,
   type VoucherRecord,
 } from "@/lib/echo-vouchers";
-import { cn } from "@/lib/utils";
 
 /* ---------------- Shared bits ---------------- */
 
@@ -29,7 +29,10 @@ function VoucherTimeline({ events }: { events: VoucherRecord["timeline"] }) {
   return (
     <div>
       {events.map((ev, i) => (
-        <div key={i} className="flex flex-col gap-1 border-b border-border py-5 md:flex-row md:items-baseline md:gap-6">
+        <div
+          key={i}
+          className="flex flex-col gap-1 border-b border-border py-5 md:flex-row md:items-baseline md:gap-6"
+        >
           <span className="w-40 shrink-0 text-xs uppercase tracking-[0.18em] text-muted-foreground">
             {ev.at}
           </span>
@@ -90,7 +93,9 @@ function VoucherModal({
           <h2 className="glyph-serif text-3xl text-foreground">{title}</h2>
         </div>
         <div className="py-8">{children}</div>
-        {footer && <div className="flex justify-end gap-3 border-t border-border pt-6">{footer}</div>}
+        {footer && (
+          <div className="flex justify-end gap-3 border-t border-border pt-6">{footer}</div>
+        )}
       </div>
     </div>
   );
@@ -100,11 +105,17 @@ const thead = "eyebrow";
 
 /* ---------------- Profile photo (add / edit / replace / remove / preview) ---------------- */
 
-export function ProfilePhotoBox({ employeeId, initials }: { employeeId: string; initials: string }) {
+export function ProfilePhotoBox({
+  employeeId,
+  initials,
+}: {
+  employeeId: string;
+  initials: string;
+}) {
   const photos = usePhotos();
   const photo = photos[employeeId];
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const pickFile = () => fileRef.current?.click();
@@ -113,33 +124,21 @@ export function ProfilePhotoBox({ employeeId, initials }: { employeeId: string; 
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      setSelected(dataUrl);
-      setPhoto(employeeId, dataUrl);
-    };
+    reader.onload = () => setCropSrc(reader.result as string);
     reader.readAsDataURL(file);
     e.target.value = "";
   };
 
   return (
     <>
-      <div
-        className={cn(
-          "relative grid h-44 place-items-center overflow-hidden border border-border bg-surface",
-          selected || photo ? "cursor-default" : "",
-        )}
-      >
+      <div className="relative grid h-44 place-items-center overflow-hidden border border-border bg-surface">
         {photo ? (
           <img src={photo} alt="" className="h-full w-full object-cover" />
         ) : (
           <span className="glyph-serif text-6xl text-foreground/70">{initials}</span>
         )}
         <button
-          onClick={() => {
-            setSelected(null);
-            setOpen(true);
-          }}
+          onClick={() => setOpen(true)}
           className="absolute inset-x-0 bottom-0 bg-background/80 py-2 text-center text-[11px] uppercase tracking-[0.16em] text-muted-foreground backdrop-blur transition-colors hover:text-foreground"
         >
           {photo ? "Edit Photo" : "Add Photo"}
@@ -167,27 +166,43 @@ export function ProfilePhotoBox({ employeeId, initials }: { employeeId: string; 
           )}
         </div>
         <p className="mt-4 text-xs text-muted-foreground">
-          Upload a photo from your device. It replaces the initials placeholder on the employee
-          profile.
+          Upload a photo from your device. A 4:5 crop window opens next, where the image can be
+          dragged, zoomed and rotated before it replaces the initials placeholder.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Button type="button" variant="secondary" onClick={pickFile}>
             {photo ? "Replace photo" : "Upload from device"}
           </Button>
           {photo && (
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => {
-                removePhoto(employeeId);
-                setSelected(null);
-              }}
-            >
-              Remove photo
-            </Button>
+            <>
+              <Button type="button" variant="secondary" onClick={() => setCropSrc(photo)}>
+                Adjust crop
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => {
+                  removePhoto(employeeId);
+                }}
+              >
+                Remove photo
+              </Button>
+            </>
           )}
         </div>
       </VoucherModal>
+
+      {cropSrc && (
+        <PassportCropper
+          src={cropSrc}
+          onCancel={() => setCropSrc(null)}
+          onSave={(dataUrl) => {
+            setPhoto(employeeId, dataUrl);
+            setOpen(false);
+            setCropSrc(null);
+          }}
+        />
+      )}
     </>
   );
 }
@@ -197,9 +212,22 @@ export function ProfilePhotoBox({ employeeId, initials }: { employeeId: string; 
 export function VouchersTab({ employeeId }: { employeeId: string }) {
   useVouchers();
   const rows = getVouchersOf(employeeId);
+  const [target, setTarget] = useState<null | {
+    code: string;
+    status: "Approved" | "Disapproved";
+  }>(null);
+  const [note, setNote] = useState("");
+
+  const confirm = () => {
+    if (!target) return;
+    reviewVoucher(target.code, target.status, note.trim() || undefined);
+    setNote("");
+    setTarget(null);
+  };
+
   return (
     <div data-reveal>
-      <div className="hidden grid-cols-[64px_170px_1fr_130px_100px_130px_140px_90px] gap-6 border-b border-border py-3 lg:grid">
+      <div className="hidden grid-cols-[64px_170px_1fr_130px_100px_130px_140px_230px] gap-6 border-b border-border py-3 lg:grid">
         <span className={thead}>No.</span>
         <span className={thead}>Voucher Code</span>
         <span className={thead}>Reason</span>
@@ -217,7 +245,7 @@ export function VouchersTab({ employeeId }: { employeeId: string }) {
       {rows.map((v, i) => (
         <div
           key={v.code}
-          className="flex items-center justify-between gap-4 border-b border-border py-5 lg:grid lg:grid-cols-[64px_170px_1fr_130px_100px_130px_140px_90px] lg:gap-6"
+          className="flex flex-wrap items-center justify-between gap-4 border-b border-border py-5 lg:grid lg:grid-cols-[64px_170px_1fr_130px_100px_130px_140px_230px] lg:gap-6"
         >
           <span className="hidden text-xs tabular-nums text-muted-foreground lg:block">
             {String(i + 1).padStart(2, "0")}
@@ -235,7 +263,7 @@ export function VouchersTab({ employeeId }: { employeeId: string }) {
           <span>
             <StatusPill status={v.status} />
           </span>
-          <span className="justify-self-end">
+          <span className="flex flex-wrap items-center justify-end gap-2">
             <Button asChild size="sm" variant="secondary">
               <Link
                 to="/monitor/$employeeId/vouchers/$voucherCode"
@@ -244,9 +272,63 @@ export function VouchersTab({ employeeId }: { employeeId: string }) {
                 View
               </Link>
             </Button>
+            {v.status === "Pending" && (
+              <>
+                <Button size="sm" onClick={() => setTarget({ code: v.code, status: "Approved" })}>
+                  Approve
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => setTarget({ code: v.code, status: "Disapproved" })}
+                >
+                  Reject
+                </Button>
+              </>
+            )}
           </span>
         </div>
       ))}
+
+      <VoucherModal
+        open={target !== null}
+        onClose={() => setTarget(null)}
+        eyebrow="Review voucher"
+        title={target?.status === "Approved" ? "Approve this voucher?" : "Reject this voucher?"}
+        footer={
+          <>
+            <Button type="button" variant="ghost" onClick={() => setTarget(null)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant={target?.status === "Disapproved" ? "destructive" : "default"}
+              onClick={confirm}
+            >
+              Confirm
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-muted-foreground">
+          {target?.code} · {employeeId}
+        </p>
+        <label className="mt-6 block">
+          <span className="eyebrow">Admin note (optional)</span>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            rows={4}
+            placeholder="Add a note for the employee…"
+            className="mt-2 w-full resize-none border-b border-border bg-transparent py-3 text-[15px] text-foreground outline-none transition-colors duration-500 placeholder:text-muted-foreground/60 focus:border-foreground/40"
+          />
+        </label>
+        <p className="mt-3 text-xs text-muted-foreground">
+          {target?.status === "Approved"
+            ? "The status changes to Approved immediately and the employee portal shows the updated status."
+            : "The status changes to Rejected immediately and the employee portal shows the updated status."}
+        </p>
+      </VoucherModal>
     </div>
   );
 }
@@ -295,12 +377,12 @@ export function EmployeeVoucherDetailPage({
 
           <SectionBlock eyebrow="Voucher" title="Voucher Information">
             <div className="grid gap-x-12 gap-y-6 md:grid-cols-2">
-                  {voucherInfoRows(v).map((r) => (
-                    <div key={r.label}>
-                      <span className="eyebrow">{r.label}</span>
-                      <div className="mt-2 text-[15px] text-foreground">{r.value}</div>
-                    </div>
-                  ))}
+              {voucherInfoRows(v).map((r) => (
+                <div key={r.label}>
+                  <span className="eyebrow">{r.label}</span>
+                  <div className="mt-2 text-[15px] text-foreground">{r.value}</div>
+                </div>
+              ))}
               {v.adminNote && (
                 <div className="md:col-span-2">
                   <span className="eyebrow">Admin Response</span>
@@ -344,7 +426,9 @@ export function RaisedVoucherPage() {
     const text = `${v.code} ${reasonText(v)} ${v.description}`.toLowerCase();
     return (
       (text.includes(query.toLowerCase()) ||
-        `${employeeOfVoucher(v.employeeId).name} ${v.employeeId}`.toLowerCase().includes(query.toLowerCase())) &&
+        `${employeeOfVoucher(v.employeeId).name} ${v.employeeId}`
+          .toLowerCase()
+          .includes(query.toLowerCase())) &&
       (reason === "All" || v.reason === reason) &&
       (status === "All" || v.status === status) &&
       (date === "All" || v.date === date)
@@ -364,7 +448,11 @@ export function RaisedVoucherPage() {
             className="h-12 w-full border-b border-border bg-transparent text-[15px] text-foreground outline-none placeholder:text-muted-foreground/60"
           />
         </div>
-        <SelectField label="Voucher type" value={reason} onChange={(e) => setReason(e.target.value)}>
+        <SelectField
+          label="Voucher type"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+        >
           <option>All</option>
           {voucherReasons.map((r) => (
             <option key={r}>{r}</option>
@@ -489,7 +577,10 @@ function RaisedVoucherReview({ v }: { v: VoucherRecord }) {
               <img src={photo} alt="" className="h-full w-full object-cover" />
             ) : (
               <span className="glyph-serif text-6xl text-foreground/70">
-                {x.name.split(" ").map((n) => n[0]).join("")}
+                {x.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")}
               </span>
             )}
           </div>

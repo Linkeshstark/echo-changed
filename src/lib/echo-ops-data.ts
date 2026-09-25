@@ -19,6 +19,68 @@ export type ActivityStatus = (typeof activityStatuses)[number];
 
 export const closedStatuses: readonly ActivityStatus[] = ["Resolved", "Closed"];
 
+/* Priority — three levels, each with a fixed colour used everywhere. */
+export const activityPriorities = ["High Priority", "Priority", "Normal"] as const;
+
+export type ActivityPriority = (typeof activityPriorities)[number];
+
+export const priorityTone: Record<ActivityPriority, string> = {
+  "High Priority": "text-destructive",
+  Priority: "text-warning",
+  Normal: "text-muted-foreground",
+};
+
+export const priorityDot: Record<ActivityPriority, string> = {
+  "High Priority": "bg-destructive",
+  Priority: "bg-warning",
+  Normal: "bg-muted-foreground",
+};
+
+/* ---------------- Client satisfaction ---------------- */
+
+export const satisfactionLabels: Record<number, string> = {
+  1: "Very poor",
+  2: "Poor",
+  3: "Okay",
+  4: "Good",
+  5: "Excellent",
+};
+
+export interface Satisfaction {
+  rating: number;
+  comment?: string;
+  ratedBy?: string;
+  ratedOn?: string;
+}
+
+export function recordSatisfaction(
+  target: { satisfaction?: Satisfaction },
+  rating: number,
+  comment?: string,
+  ratedBy = "Client",
+): Satisfaction {
+  const clamped = Math.min(5, Math.max(1, Math.round(rating)));
+  const saved: Satisfaction = {
+    rating: clamped,
+    ...(comment?.trim() ? { comment: comment.trim() } : {}),
+    ratedBy,
+    ratedOn: new Date().toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }),
+  };
+  target.satisfaction = saved;
+  return saved;
+}
+
+export const averageSatisfaction = (rows: { satisfaction?: Satisfaction }[]) => {
+  const rated = rows.filter((r) => typeof r.satisfaction?.rating === "number");
+  if (rated.length === 0) return null;
+  const total = rated.reduce((sum, r) => sum + (r.satisfaction?.rating ?? 0), 0);
+  return Math.round((total / rated.length) * 10) / 10;
+};
+
 export interface ActivityAttachment {
   kind: "Photo" | "Voice" | "Document";
   label: string;
@@ -35,6 +97,7 @@ export interface ActivityTimelineEntry {
 
 export interface RaisedActivity {
   code: string;
+  ticket: string;
   client: string;
   site: string;
   siteAddress: string;
@@ -43,17 +106,19 @@ export interface RaisedActivity {
   notes: string;
   raisedDate: string;
   raisedTime: string;
-  priority: "High" | "Medium" | "Low";
+  priority: ActivityPriority;
   status: ActivityStatus;
   assignee?: string;
   expectedCompletion?: { date: string; time: string };
   attachments: ActivityAttachment[];
   timeline: ActivityTimelineEntry[];
+  satisfaction?: Satisfaction;
 }
 
 export const raisedActivities: RaisedActivity[] = [
   {
     code: "RA-001",
+    ticket: "ACT-2026-0001",
     client: clients[0] ?? "Aster Labs",
     site: "Aster HQ · OMR",
     siteAddress: "Level 3, Aster Tower, Old Mahabalipuram Road, Chennai",
@@ -63,7 +128,7 @@ export const raisedActivities: RaisedActivity[] = [
     notes: "Client shared two photos and a voice note. Urgent before peak hours.",
     raisedDate: "22 Sep 2026",
     raisedTime: "10:42 AM",
-    priority: "High",
+    priority: "High Priority",
     status: "Raised",
     attachments: [
       { kind: "Photo", label: "Entrance leak", meta: "IMG_0421.jpeg · 2.1 MB" },
@@ -84,6 +149,7 @@ export const raisedActivities: RaisedActivity[] = [
   },
   {
     code: "RA-002",
+    ticket: "ACT-2026-0002",
     client: clients[2] ?? "Meridian House",
     site: "Meridian Campus",
     siteAddress: "Block B, Meridian House, Anna Nagar, Chennai",
@@ -93,7 +159,7 @@ export const raisedActivities: RaisedActivity[] = [
     notes: "Client reported hearing loud cycling from the motor room.",
     raisedDate: "22 Sep 2026",
     raisedTime: "1:15 PM",
-    priority: "Medium",
+    priority: "Priority",
     status: "In Progress",
     assignee: "Dev Kumar",
     attachments: [
@@ -109,6 +175,7 @@ export const raisedActivities: RaisedActivity[] = [
   },
   {
     code: "RA-003",
+    ticket: "ACT-2026-0003",
     client: clients[1] ?? "Nova Retail",
     site: "Nova Warehouse",
     siteAddress: "Plot 14, Puzhal Industrial Estate, Chennai",
@@ -118,7 +185,7 @@ export const raisedActivities: RaisedActivity[] = [
     notes: "Client attached a video of the units from the service catwalk.",
     raisedDate: "22 Sep 2026",
     raisedTime: "9:10 AM",
-    priority: "High",
+    priority: "High Priority",
     status: "Assigned",
     assignee: "Arjun Mehta",
     attachments: [
@@ -139,6 +206,7 @@ export const raisedActivities: RaisedActivity[] = [
   },
   {
     code: "RA-004",
+    ticket: "ACT-2026-0004",
     client: clients[3] ?? "Arc Systems",
     site: "Arc Factory Floor",
     siteAddress: "Sector 21, Maraimalai Nagar, Chennai",
@@ -148,7 +216,7 @@ export const raisedActivities: RaisedActivity[] = [
     notes: "Non-urgent — production is not blocked. Scheduling a routine visit.",
     raisedDate: "22 Sep 2026",
     raisedTime: "11:05 AM",
-    priority: "Low",
+    priority: "Normal",
     status: "Acknowledged",
     attachments: [
       {
@@ -170,6 +238,7 @@ export const raisedActivities: RaisedActivity[] = [
   },
   {
     code: "RA-005",
+    ticket: "ACT-2026-0005",
     client: clients[0] ?? "Aster Labs",
     site: "Aster HQ · OMR",
     siteAddress: "Level 3, Aster Tower, Old Mahabalipuram Road, Chennai",
@@ -179,7 +248,7 @@ export const raisedActivities: RaisedActivity[] = [
     notes: "Closed earlier; reopened by client as stains returned.",
     raisedDate: "18 Sep 2026",
     raisedTime: "4:30 PM",
-    priority: "Medium",
+    priority: "Priority",
     status: "Resolved",
     assignee: "Dev Kumar",
     attachments: [
@@ -207,6 +276,12 @@ export const raisedActivities: RaisedActivity[] = [
       },
       { time: "4:10 PM", status: "Closed", updatedBy: "Admin", note: "Activity closed" },
     ],
+    satisfaction: {
+      rating: 5,
+      comment: "Quick response and the entrance is dry again. Very happy with the team.",
+      ratedBy: "Meera Raghavan",
+      ratedOn: "20 Sep 2026",
+    },
   },
 ];
 
@@ -214,6 +289,70 @@ const nowTime = () =>
   new Intl.DateTimeFormat("en-IN", { hour: "numeric", minute: "2-digit", hour12: true }).format(
     new Date(),
   );
+
+/* Every activity gets a unique ticket: ACT-<year>-<0001>. */
+export function nextActivityTicket(): string {
+  const year = new Date().getFullYear();
+  const prefix = `ACT-${year}-`;
+  const highest = raisedActivities.reduce((max, a) => {
+    const seq = Number(a.ticket?.replace(prefix, ""));
+    return Number.isFinite(seq) && seq > max ? seq : max;
+  }, 0);
+  return `${prefix}${String(highest + 1).padStart(4, "0")}`;
+}
+
+export function nextActivityCode(): string {
+  return `RA-${String(raisedActivities.length + 1).padStart(3, "0")}`;
+}
+
+export function addRaisedActivity(input: {
+  client: string;
+  site: string;
+  siteAddress: string;
+  problem: string;
+  description: string;
+  notes: string;
+  priority: ActivityPriority;
+  status: ActivityStatus;
+  assignee?: string;
+  expectedCompletion?: { date: string; time: string };
+  attachments: ActivityAttachment[];
+}): RaisedActivity {
+  const now = new Date();
+  const date = new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(now);
+  const ticket = nextActivityTicket();
+  const activity: RaisedActivity = {
+    code: nextActivityCode(),
+    ticket,
+    client: input.client,
+    site: input.site,
+    siteAddress: input.siteAddress,
+    problem: input.problem,
+    description: input.description,
+    notes: input.notes,
+    raisedDate: date,
+    raisedTime: nowTime(),
+    priority: input.priority,
+    status: input.status,
+    ...(input.assignee ? { assignee: input.assignee } : {}),
+    ...(input.expectedCompletion ? { expectedCompletion: input.expectedCompletion } : {}),
+    attachments: input.attachments,
+    timeline: [
+      {
+        time: nowTime(),
+        status: input.status,
+        updatedBy: "Admin",
+        note: `Ticket ${ticket} created`,
+      },
+    ],
+  };
+  raisedActivities.unshift(activity);
+  return activity;
+}
 
 export const findActivity = (code: string): RaisedActivity | undefined =>
   raisedActivities.find((a) => a.code.toLowerCase() === code.trim().toLowerCase());
@@ -291,6 +430,7 @@ export interface MaintenanceRecord {
   before?: string;
   after?: string;
   status: MaintenanceStatus;
+  schedule?: string;
 }
 
 export const maintenanceRecords: MaintenanceRecord[] = [
@@ -388,13 +528,18 @@ export const maintenanceForClient = (client: string) =>
 
 /* ---------------- Generated documents (Bill Book) ---------------- */
 
-export type DocType = "Quotation" | "Invoice" | "Bill" | "Voucher";
+export type DocType = "Quotation" | "Invoice" | "Bill" | "Voucher" | "Delivery Challan";
 
 export const docTypeMeta: Record<DocType, { prefix: string; label: string; eyebrow: string }> = {
   Quotation: { prefix: "QUO", label: "New Quotation", eyebrow: "Bill Book · Quotation" },
   Invoice: { prefix: "INV", label: "New Invoice", eyebrow: "Bill Book · Invoice" },
   Bill: { prefix: "BIL", label: "New Bill", eyebrow: "Bill Book · Bill" },
   Voucher: { prefix: "VCH", label: "New Voucher", eyebrow: "Bill Book · Voucher" },
+  "Delivery Challan": {
+    prefix: "DCH",
+    label: "New Delivery Challan",
+    eyebrow: "Bill Book · Delivery Challan",
+  },
 };
 
 export interface GeneratedDoc {

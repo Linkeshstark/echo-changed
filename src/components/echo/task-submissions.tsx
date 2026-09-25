@@ -18,6 +18,8 @@ import { ChecklistGrid, FileTile, SectionBlock, StatusPill } from "./employee-de
 import { Button } from "@/components/ui/button";
 import { employees } from "@/lib/echo-data";
 import { submissionCounts, submissionReviews, type TaskSubmission } from "@/lib/echo-modules-data";
+import { recordSatisfaction } from "@/lib/echo-ops-data";
+import { StarRating, SatisfactionReadout } from "./satisfaction";
 import { cn } from "@/lib/utils";
 
 /* ---------------- Task Submissions dashboard ---------------- */
@@ -139,6 +141,11 @@ export function EmployeeSubmissionTimelinePage({ employeeId }: { employeeId: str
               </span>
             </span>
             <span className="flex items-center gap-6">
+              {task.satisfaction?.rating ? (
+                <span className="hidden items-center gap-1 text-xs tabular-nums text-muted-foreground md:flex">
+                  <span className="text-foreground">{task.satisfaction.rating}</span>/5
+                </span>
+              ) : null}
               <StatusPill status={task.review} />
               <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform duration-500 ease-luxury group-hover:translate-x-1" />
             </span>
@@ -208,8 +215,16 @@ export function TaskReviewPage({ employeeId, taskId }: { employeeId: string; tas
   const [note, setNote] = useState(task?.note);
   const [confirm, setConfirm] = useState("");
   const [noteOpen, setNoteOpen] = useState(false);
+  const [rating, setRating] = useState(task?.satisfaction?.rating ?? 0);
+  const [comment, setComment] = useState(task?.satisfaction?.comment ?? "");
 
   const verdict = review ?? task?.review;
+  const approved = verdict === "Approved";
+
+  const rate = (value: number) => {
+    setRating(value);
+    if (task) recordSatisfaction(task, value, comment);
+  };
 
   if (!task) {
     return (
@@ -342,6 +357,44 @@ export function TaskReviewPage({ employeeId, taskId }: { employeeId: string; tas
           </div>
         </SectionBlock>
       </div>
+
+      {approved ? (
+        <div className="mb-16">
+          <SectionBlock eyebrow="Client satisfaction" title="Rate the completed task">
+            <div className="max-w-2xl border border-border bg-surface px-5 py-6">
+              <StarRating value={rating} onChange={rate} />
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                onBlur={() => comment !== (task.satisfaction?.comment ?? "") && rate(rating || 5)}
+                rows={3}
+                placeholder="Add the client's comment about the work…"
+                className="mt-5 w-full resize-y border-b border-border bg-transparent py-3 text-[15px] leading-relaxed text-foreground outline-none placeholder:text-muted-foreground/60"
+              />
+              {task.satisfaction?.rating ? (
+                <SatisfactionReadout
+                  satisfaction={{
+                    ...task.satisfaction,
+                    comment: task.satisfaction.comment ?? comment,
+                  }}
+                  className="mt-6"
+                  showComment={false}
+                />
+              ) : null}
+              <Button
+                className="mt-6"
+                disabled={!rating}
+                onClick={() => {
+                  recordSatisfaction(task, rating, comment);
+                  setConfirm("Client satisfaction recorded.");
+                }}
+              >
+                Save Satisfaction
+              </Button>
+            </div>
+          </SectionBlock>
+        </div>
+      ) : null}
 
       <Modal
         open={noteOpen}

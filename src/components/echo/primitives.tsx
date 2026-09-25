@@ -325,6 +325,8 @@ export function Modal({
   eyebrow,
   children,
   wide,
+  saveLabel = "Save",
+  onSave,
 }: {
   open: boolean;
   onClose: () => void;
@@ -332,11 +334,14 @@ export function Modal({
   eyebrow?: string;
   children: ReactNode;
   wide?: boolean;
+  saveLabel?: string;
+  onSave?: (form: FormData) => void;
 }) {
   if (!open) return null;
-  const submit = (e: FormEvent) => {
+  const submit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    onClose();
+    if (onSave) onSave(new FormData(e.currentTarget));
+    else onClose();
   };
   return (
     <div
@@ -345,7 +350,10 @@ export function Modal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="animate-enter w-full max-w-[520px] bg-background"
+        className={cn(
+          "animate-enter w-full bg-background",
+          wide ? "max-w-[860px]" : "max-w-[520px]",
+        )}
       >
         <div className="border-b border-border pb-5">
           {eyebrow && <Eyebrow className="mb-3">{eyebrow}</Eyebrow>}
@@ -357,7 +365,7 @@ export function Modal({
             <Button type="button" variant="ghost" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit">Save</Button>
+            <Button type="submit">{saveLabel}</Button>
           </div>
         </form>
       </div>

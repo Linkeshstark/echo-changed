@@ -28,7 +28,14 @@ import {
 } from "./primitives";
 import { TabBar } from "./employee-detail";
 import { Button } from "@/components/ui/button";
-import { advances, bills, employees, metrics } from "@/lib/echo-data";
+import { advances as seedAdvances, bills, employees, metrics } from "@/lib/echo-data";
+import {
+  advanceReasons,
+  addAdvance,
+  addDeduction,
+  useAdvances,
+  useDeductions,
+} from "@/lib/echo-advances";
 import {
   extendedEmployees,
   finalPayable,
@@ -37,30 +44,73 @@ import {
   submissionReviews,
 } from "@/lib/echo-modules-data";
 import { cn } from "@/lib/utils";
+import { signOutSession } from "@/lib/echo-session";
+import { clientProfiles } from "@/lib/echo-ops-data";
+import { CallButton } from "./call-button";
 
-/* ---------------- Advances ---------------- */
+/* ---------------- Update Salary (advances + deductions) ---------------- */
+function EmployeePicker({ value, onChange }: { value: string; onChange: (id: string) => void }) {
+  return (
+    <SelectField
+      label="Employee Name"
+      required
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+    >
+      <option value="" disabled>
+        Select employee
+      </option>
+      {employees.map((e) => (
+        <option key={e.id} value={e.id}>
+          {e.name}
+        </option>
+      ))}
+    </SelectField>
+  );
+}
+
+const nameOf = (id: string) => employees.find((e) => e.id === id)?.name ?? id;
+
 export function AdvancesPage() {
   const [open, setOpen] = useState(false);
+  const [deduct, setDeduct] = useState(false);
+  const [reason, setReason] = useState(advanceReasons[0]!);
+  const [manualReason, setManualReason] = useState("");
+  const [deductReason, setDeductReason] = useState("");
+  const [emp, setEmp] = useState("");
+  const [deductEmp, setDeductEmp] = useState("");
+
+  const rows = useAdvances();
+  const cuts = useDeductions();
+
   return (
     <AppShell>
       <PageHeader
-        title="Employee Advances"
+        title="Update Salary"
         eyebrow="Finance"
-        action={<Button onClick={() => setOpen(true)}>New Advance</Button>}
+        action={
+          <div className="flex flex-wrap gap-3">
+            <Button variant="secondary" onClick={() => setDeduct(true)}>
+              Add Deduction
+            </Button>
+            <Button onClick={() => setOpen(true)}>New Advance</Button>
+          </div>
+        }
       />
 
-      <div className="hidden grid-cols-[1fr_120px_140px_140px_120px] gap-8 border-b border-border py-3 md:grid">
+      <div className="hidden grid-cols-[1fr_120px_150px_150px_110px_120px] gap-8 border-b border-border py-3 md:grid">
         <span className="eyebrow">Employee</span>
         <span className="eyebrow">ID</span>
+        <span className="eyebrow">Advance Description</span>
         <span className="eyebrow">Amount</span>
         <span className="eyebrow">Date</span>
         <span className="eyebrow text-right">Time</span>
       </div>
       <div>
-        {advances.map((row) => (
+        {rows.map((row) => (
           <div
-            key={row.id}
-            className="hairline-b grid gap-2 py-5 transition-opacity duration-500 hover:opacity-70 md:grid-cols-[1fr_120px_140px_140px_120px] md:items-center md:gap-8"
+            key={`${row.id}-${row.date}-${row.time}`}
+            className="hairline-b grid gap-2 py-5 transition-opacity duration-500 hover:opacity-70 md:grid-cols-[1fr_120px_150px_150px_110px_120px] md:items-center md:gap-8"
           >
             <Link
               to="/employees/$employeeId"
@@ -70,6 +120,7 @@ export function AdvancesPage() {
               {row.employee}
             </Link>
             <span className="text-sm text-muted-foreground">{row.id}</span>
+            <span className="text-sm text-muted-foreground">{row.reason}</span>
             <span className="text-[15px] text-foreground">{row.amount}</span>
             <span className="text-sm text-muted-foreground">{row.date}</span>
             <span className="text-sm tabular-nums text-muted-foreground md:text-right">
@@ -79,20 +130,149 @@ export function AdvancesPage() {
         ))}
       </div>
 
-      <Modal open={open} onClose={() => setOpen(false)} title="New advance" eyebrow="Finance">
+      <Eyebrow className="mt-16">Deductions</Eyebrow>
+      <div className="hidden grid-cols-[1fr_120px_1fr_150px_110px_120px] gap-8 border-b border-border py-3 md:grid">
+        <span className="eyebrow">Employee</span>
+        <span className="eyebrow">ID</span>
+        <span className="eyebrow">Deduction Description</span>
+        <span className="eyebrow">Amount</span>
+        <span className="eyebrow">Date</span>
+        <span className="eyebrow text-right">Time</span>
+      </div>
+      <div>
+        {cuts.length === 0 && (
+          <p className="py-8 text-sm text-muted-foreground">No deductions recorded yet.</p>
+        )}
+        {cuts.map((row) => (
+          <div
+            key={`${row.id}-${row.date}-${row.time}-${row.reason}`}
+            className="hairline-b grid gap-2 py-5 transition-opacity duration-500 hover:opacity-70 md:grid-cols-[1fr_120px_1fr_150px_110px_120px] md:items-center md:gap-8"
+          >
+            <Link
+              to="/employees/$employeeId"
+              params={{ employeeId: row.id }}
+              className="text-[15px] text-foreground"
+            >
+              {row.employee}
+            </Link>
+            <span className="text-sm text-muted-foreground">{row.id}</span>
+            <span className="text-sm text-muted-foreground">{row.reason}</span>
+            <span className="text-[15px] text-foreground">{row.amount}</span>
+            <span className="text-sm text-muted-foreground">{row.date}</span>
+            <span className="text-sm tabular-nums text-muted-foreground md:text-right">
+              {row.time}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title="New advance"
+        eyebrow="Update Salary"
+        onSave={(form) => {
+          const amount = Number(form.get("amount"));
+          if (!emp || !amount) return;
+          addAdvance({
+            employee: nameOf(emp),
+            id: emp,
+            amount,
+            reason: reason === "Other (manual)" ? manualReason.trim() || "Other" : reason,
+          });
+          setOpen(false);
+          setEmp("");
+          setManualReason("");
+        }}
+      >
         <div className="grid gap-9">
-          <SelectField label="Employee" required>
-            <option value="" disabled>
-              Select employee
-            </option>
-            {employees.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.name}
-              </option>
-            ))}
-          </SelectField>
-          <TextField label="Amount" type="number" min="1" required />
-          <TextField label="Date" type="date" required />
+          <EmployeePicker value={emp} onChange={setEmp} />
+          <label className="block">
+            <span className="eyebrow">Employee ID</span>
+            <input
+              value={emp ? emp : ""}
+              readOnly
+              placeholder="Select an employee"
+              className="mt-2 w-full border-b border-border bg-transparent py-3 text-[15px] text-foreground outline-none placeholder:text-muted-foreground/60"
+            />
+          </label>
+          <TextField label="Amount" name="amount" type="number" min="1" required />
+          <label className="block">
+            <span className="eyebrow">
+              Advance Description <span className="text-destructive">*</span>
+            </span>
+            <select
+              required
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              className="mt-2 w-full border-b border-border bg-transparent py-3 text-[15px] text-foreground outline-none"
+            >
+              {advanceReasons.map((r) => (
+                <option key={r}>{r}</option>
+              ))}
+            </select>
+          </label>
+          {reason === "Other (manual)" && (
+            <TextField
+              label="Describe the advance"
+              required
+              value={manualReason}
+              onChange={(e) => setManualReason(e.target.value)}
+            />
+          )}
+        </div>
+      </Modal>
+
+      <Modal
+        open={deduct}
+        onClose={() => setDeduct(false)}
+        title="Add Deduction"
+        eyebrow="Update Salary"
+        onSave={(form) => {
+          const amount = Number(form.get("deductionAmount"));
+          const description = String(form.get("deductionDescription") ?? "").trim();
+          if (!deductEmp || !amount || !description) return;
+          const pickedDate = String(form.get("deductionDate") ?? "");
+          const pickedTime = String(form.get("deductionTime") ?? "");
+          addDeduction({
+            employee: nameOf(deductEmp),
+            id: deductEmp,
+            amount,
+            reason: description,
+            ...(pickedDate ? { date: pickedDate } : {}),
+            ...(pickedTime ? { time: pickedTime } : {}),
+          });
+          setDeduct(false);
+          setDeductEmp("");
+        }}
+      >
+        <div className="grid gap-9">
+          <EmployeePicker value={deductEmp} onChange={setDeductEmp} />
+          <label className="block">
+            <span className="eyebrow">Employee ID</span>
+            <input
+              value={deductEmp}
+              readOnly
+              placeholder="Select an employee"
+              className="mt-2 w-full border-b border-border bg-transparent py-3 text-[15px] text-foreground outline-none placeholder:text-muted-foreground/60"
+            />
+          </label>
+          <TextField
+            label="Deduction Amount"
+            name="deductionAmount"
+            type="number"
+            min="1"
+            required
+          />
+          <TextField
+            label="Deduction Description"
+            name="deductionDescription"
+            required
+            maxLength={200}
+            placeholder="Reason for this deduction"
+          />
+          <TextField label="Date" name="deductionDate" type="date" required />
+          <TextField label="Time" name="deductionTime" type="time" required />
         </div>
       </Modal>
     </AppShell>
@@ -121,8 +301,11 @@ const profileStatusTone: Record<string, string> = {
 export function EmployeeProfilePage({ employeeId }: { employeeId: string }) {
   const employee = employees.find((e) => e.id === employeeId) ?? employees[0];
   const [tab, setTab] = useState("Overview");
+  const allAdvances = useAdvances();
+  const allDeductions = useDeductions();
   if (!employee) return null;
-  const history = advances.filter((a) => a.id === employee.id);
+  const history = allAdvances.filter((a) => a.id === employee.id);
+  const cuts = allDeductions.filter((d) => d.id === employee.id);
   const initials = employee.name
     .split(" ")
     .map((x) => x[0])
@@ -177,11 +360,30 @@ export function EmployeeProfilePage({ employeeId }: { employeeId: string }) {
                   <span>
                     <span className="block text-[15px] text-foreground">{a.amount}</span>
                     <span className="mt-1 block text-xs text-muted-foreground">
-                      {a.date} · {a.time}
+                      {a.reason} · {a.date} · {a.time}
                     </span>
                   </span>
                   <span className="justify-self-end text-xs uppercase tracking-[0.16em] text-muted-foreground md:text-right">
                     Approved
+                  </span>
+                </DataRow>
+              ))}
+            </div>
+            <Eyebrow className="mt-12">Deductions</Eyebrow>
+            <div className="mt-4">
+              {cuts.length === 0 && (
+                <p className="py-10 text-sm text-muted-foreground">No deductions on record.</p>
+              )}
+              {cuts.map((d) => (
+                <DataRow key={`${d.date}-${d.time}-${d.reason}`}>
+                  <span>
+                    <span className="block text-[15px] text-foreground">− {d.amount}</span>
+                    <span className="mt-1 block text-xs text-muted-foreground">
+                      {d.reason} · {d.date} · {d.time}
+                    </span>
+                  </span>
+                  <span className="justify-self-end text-xs uppercase tracking-[0.16em] text-muted-foreground md:text-right">
+                    Deducted
                   </span>
                 </DataRow>
               ))}
@@ -242,10 +444,11 @@ export function EmployeeProfilePage({ employeeId }: { employeeId: string }) {
 
       {tab === "Submissions" && (
         <div data-reveal className="pt-10">
-          <div className="hidden grid-cols-[1fr_140px_160px_160px] gap-6 border-b border-border py-3 md:grid">
+          <div className="hidden grid-cols-[1fr_140px_160px_120px_160px] gap-6 border-b border-border py-3 md:grid">
             <span className="eyebrow">Task</span>
             <span className="eyebrow">Client</span>
             <span className="eyebrow">Date</span>
+            <span className="eyebrow text-right">Satisfaction</span>
             <span className="eyebrow text-right">Review Result</span>
           </div>
           <div>
@@ -255,13 +458,16 @@ export function EmployeeProfilePage({ employeeId }: { employeeId: string }) {
                   key={t.id}
                   to="/submissions/$employeeId/$taskId"
                   params={{ employeeId: employee.id, taskId: String(t.id) }}
-                  className="grid gap-2 border-b border-border py-5 transition-opacity duration-500 hover:opacity-70 md:grid-cols-[1fr_140px_160px_160px] md:items-center md:gap-6"
+                  className="grid gap-2 border-b border-border py-5 transition-opacity duration-500 hover:opacity-70 md:grid-cols-[1fr_140px_160px_120px_160px] md:items-center md:gap-6"
                 >
                   <span className="text-[15px] text-foreground">
                     Task #{t.id} — {t.title}
                   </span>
                   <span className="text-sm text-muted-foreground">{t.client}</span>
                   <span className="text-sm text-muted-foreground">{t.date}</span>
+                  <span className="text-sm tabular-nums text-muted-foreground md:text-right">
+                    {t.satisfaction?.rating ? `${t.satisfaction.rating} / 5` : "—"}
+                  </span>
                   <span
                     className={cn(
                       "justify-self-end text-xs uppercase tracking-[0.16em]",
@@ -372,11 +578,31 @@ export function EmployeeProfilePage({ employeeId }: { employeeId: string }) {
                 <span>
                   <span className="block text-[15px] text-foreground">{a.amount}</span>
                   <span className="mt-1 block text-xs text-muted-foreground">
-                    {a.date} · {a.time}
+                    {a.reason} · {a.date} · {a.time}
                   </span>
                 </span>
                 <span className="justify-self-end text-xs uppercase tracking-[0.16em] text-muted-foreground md:text-right">
                   Approved
+                </span>
+              </DataRow>
+            ))}
+          </div>
+
+          <Eyebrow className="mt-12">Deductions</Eyebrow>
+          <div className="mt-4">
+            {cuts.length === 0 && (
+              <p className="py-10 text-sm text-muted-foreground">No deductions on record.</p>
+            )}
+            {cuts.map((d) => (
+              <DataRow key={`${d.date}-${d.time}-${d.reason}`}>
+                <span>
+                  <span className="block text-[15px] text-foreground">− {d.amount}</span>
+                  <span className="mt-1 block text-xs text-muted-foreground">
+                    {d.reason} · {d.date} · {d.time}
+                  </span>
+                </span>
+                <span className="justify-self-end text-xs uppercase tracking-[0.16em] text-muted-foreground md:text-right">
+                  Deducted
                 </span>
               </DataRow>
             ))}
@@ -664,7 +890,7 @@ export function BillBookPage() {
       </section>
 
       <div className="flex gap-7 border-b border-border pb-3">
-        {["All", "Quotations", "Invoices", "Bills"].map((x) => (
+        {["All", "Quotations", "Invoices", "Bills", "Delivery Challans"].map((x) => (
           <button
             key={x}
             onClick={() => setTab(x)}
@@ -694,7 +920,10 @@ export function BillBookPage() {
               className="hairline-b grid gap-2 py-5 transition-opacity duration-500 hover:opacity-70 md:grid-cols-[150px_1fr_120px_150px_120px] md:items-center md:gap-6"
             >
               <span className="text-[15px] text-foreground">{b.id}</span>
-              <span className="text-sm text-muted-foreground">{b.client}</span>
+              <span className="flex items-center gap-3 text-sm text-muted-foreground">
+                {b.client}
+                <CallButton phone={clientProfiles[b.client]?.phone} name={b.client} />
+              </span>
               <span className="text-sm text-muted-foreground">{b.type}</span>
               <span className="text-[15px] text-foreground md:text-right">{b.amount}</span>
               <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground md:text-right">
@@ -710,120 +939,11 @@ export function BillBookPage() {
   );
 }
 
-/* ---------------- Chats ---------------- */
-export function ChatsPage() {
-  const groups = ["Aster Labs", "Nova Retail", "Meridian House", "Arc Systems"];
-  const [active, setActive] = useState(groups[0] ?? "");
-  const [query, setQuery] = useState("");
-  const [message, setMessage] = useState("");
-  const [sent, setSent] = useState<string[]>([]);
-  return (
-    <AppShell>
-      <PageHeader title="Client communication" eyebrow="Group Chats" />
-
-      <div className="grid lg:grid-cols-[320px_1fr]">
-        <div className="border-b border-border lg:border-b-0 lg:border-r lg:pr-10">
-          <div className="relative border-b border-border">
-            <Search className="absolute left-1 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search chats"
-              className="h-14 w-full bg-transparent pl-8 pr-3 text-[15px] text-foreground outline-none placeholder:text-muted-foreground/60"
-            />
-          </div>
-          <div>
-            {groups
-              .filter((g) => g.toLowerCase().includes(query.toLowerCase()))
-              .map((g) => (
-                <button
-                  key={g}
-                  onClick={() => setActive(g)}
-                  className={cn(
-                    "group flex w-full items-center justify-between border-b border-border py-6 pl-1 text-left transition-opacity duration-500 hover:opacity-70",
-                    active === g ? "" : "opacity-50",
-                  )}
-                >
-                  <span className="flex items-center gap-5">
-                    <span className="glyph-serif text-xl leading-none text-foreground">
-                      {g.slice(0, 1)}
-                    </span>
-                    <span>
-                      <span className="block text-[15px] text-foreground">{g}</span>
-                      <span className="mt-1 block text-xs text-muted-foreground">Active now</span>
-                    </span>
-                  </span>
-                  {active === g && <span className="mr-1 h-1 w-1 rounded-full bg-accent" />}
-                </button>
-              ))}
-          </div>
-        </div>
-
-        <section className="flex min-h-[560px] flex-col lg:pl-12">
-          <div className="border-b border-border py-5">
-            <h3 className="glyph-serif text-2xl text-foreground">{active}</h3>
-            <p className="mt-2 text-xs uppercase tracking-[0.16em] text-muted-foreground">
-              8 members · 3 online
-            </p>
-          </div>
-
-          <div className="flex-1 space-y-8 py-9">
-            <div className="max-w-md">
-              <p className="text-[15px] leading-relaxed text-foreground">
-                The service team has reached the site. We’ll share photos shortly.
-              </p>
-              <p className="mt-2 text-xs text-muted-foreground">Sara · 4:16 PM</p>
-            </div>
-            <div className="ml-auto max-w-md text-right">
-              <p className="text-[15px] leading-relaxed text-foreground">
-                Thank you. Please also attach the signed checklist.
-              </p>
-              <p className="mt-2 text-xs text-muted-foreground">You · 4:19 PM</p>
-            </div>
-            {sent.map((m, i) => (
-              <div key={i} className="ml-auto max-w-md text-right">
-                <p className="text-[15px] leading-relaxed text-foreground">{m}</p>
-                <p className="mt-2 text-xs text-muted-foreground">You · just now</p>
-              </div>
-            ))}
-            <div className="flex max-w-md items-start gap-3">
-              <MessageCircle className="mt-1 size-4 shrink-0 text-muted-foreground" />
-              <p className="text-[15px] leading-relaxed text-muted-foreground">
-                Awaiting client response on the checklist.
-              </p>
-            </div>
-          </div>
-
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (!message.trim()) return;
-              setSent([...sent, message.trim()]);
-              setMessage("");
-            }}
-            className="hairline-t flex items-center gap-4 pt-4"
-          >
-            <input
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Write a message…"
-              className="h-14 flex-1 bg-transparent text-[15px] text-foreground outline-none placeholder:text-muted-foreground/60"
-            />
-            <Button type="submit" size="icon" aria-label="Send">
-              <Send className="size-4" />
-            </Button>
-          </form>
-        </section>
-      </div>
-    </AppShell>
-  );
-}
-
 /* ---------------- Settings ---------------- */
 export function SettingsPage() {
   const navigate = useNavigate();
   const signOut = () => {
-    window.sessionStorage.removeItem("echo-session");
+    signOutSession();
     navigate({ to: "/auth" });
   };
   return (

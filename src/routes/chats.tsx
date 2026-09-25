@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ChatsPage } from "@/components/echo/data-pages";
+import { ChatsPage } from "@/components/echo/chats";
 export const Route = createFileRoute("/chats")({
   head: () => ({
     meta: [

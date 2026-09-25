@@ -8,6 +8,7 @@ import {
   ClipboardList,
   FileText,
   Folder,
+  HandHeart,
   HelpCircle,
   Home,
   MessageSquare,
@@ -92,6 +93,20 @@ export const bills = [
     status: "Pending",
   },
   { id: "BIL-0921", client: "Arc Systems", amount: "₹18,450", type: "Bill", status: "Draft" },
+  {
+    id: "DCH-2011",
+    client: "Aster Labs",
+    amount: "₹24,900",
+    type: "Delivery Challan",
+    status: "Delivered",
+  },
+  {
+    id: "DCH-2012",
+    client: "Meridian House",
+    amount: "₹9,750",
+    type: "Delivery Challan",
+    status: "Pending",
+  },
 ];
 export const navItems = [
   { label: "Home", to: "/dashboard", icon: Home },
@@ -125,6 +140,7 @@ export const navSections = [
       { label: "Raised Activity", to: "/raised-activity", icon: TriangleAlert },
       { label: "Update Raised Activity", to: "/update-activity", icon: RefreshCcw },
       { label: "Raised Voucher", to: "/raised-voucher", icon: Receipt },
+      { label: "Donation", to: "/donation", icon: HandHeart },
     ],
   },
   {
@@ -161,10 +177,16 @@ export const quickActions = [
     icon: Activity,
   },
   {
-    title: "Create New Advance",
-    detail: "Manage salary advances",
+    title: "Update Salary",
+    detail: "Manage salary advances and deductions",
     to: "/advances",
     icon: BadgeIndianRupee,
+  },
+  {
+    title: "Donation",
+    detail: "Record contributions and approve receipts",
+    to: "/donation",
+    icon: HandHeart,
   },
   { title: "Overall Data", detail: "View company performance", to: "/analytics", icon: BarChart3 },
   {
@@ -224,6 +246,8 @@ export const searchRecords = [
     detail: x.amount,
     to: "/advances",
   })),
+  { type: "Module", label: "Update Salary", detail: "Advances and deductions", to: "/advances" },
+  { type: "Module", label: "Donation", detail: "Donation records and approvals", to: "/donation" },
   ...bills.map((x) => ({
     type: "Bill",
     label: x.id,

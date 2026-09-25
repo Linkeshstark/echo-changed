@@ -1,4 +1,5 @@
 import { clients, employees } from "./echo-data";
+import type { Satisfaction } from "./echo-ops-data";
 
 /* ---------------- Shared types ---------------- */
 
@@ -28,6 +29,7 @@ export interface TaskSubmission {
   review: ReviewStatus;
   note?: string;
   submittedOn: string;
+  satisfaction?: Satisfaction;
 }
 
 /* ---------------- Task submissions ---------------- */
@@ -107,6 +109,12 @@ export const submissionReviews: { employeeId: string; tasks: TaskSubmission[] }[
         review: "Approved",
         submittedOn: "20 Sep 2026",
         note: "All evidence verified. Approved.",
+        satisfaction: {
+          rating: 4,
+          comment: "Team arrived on time and cleaned up before leaving. Filters working well.",
+          ratedBy: "Meera Raghavan",
+          ratedOn: "21 Sep 2026",
+        },
       },
       {
         id: 19,
@@ -150,6 +158,11 @@ export const submissionReviews: { employeeId: string; tasks: TaskSubmission[] }[
         review: "Approved",
         submittedOn: "21 Sep 2026",
         note: "Numbers match. Approved.",
+        satisfaction: {
+          rating: 5,
+          ratedBy: "Vikram Desai",
+          ratedOn: "21 Sep 2026",
+        },
       },
       {
         id: 17,
@@ -234,6 +247,12 @@ export const submissionReviews: { employeeId: string; tasks: TaskSubmission[] }[
         review: "Approved",
         submittedOn: "17 Sep 2026",
         note: "Commissioning verified. Approved.",
+        satisfaction: {
+          rating: 4,
+          comment: "Install clean and tidy. Would recommend the team again.",
+          ratedBy: "Meera Raghavan",
+          ratedOn: "18 Sep 2026",
+        },
       },
     ],
   },
@@ -887,6 +906,12 @@ export const extendedEmployees: EmployeeExtended[] = [
 
 export const extendedOf = (employeeId: string) =>
   extendedEmployees.find((e) => e.employee.id === employeeId) ?? extendedEmployees[0]!;
+
+/* Phone numbers for the mock call buttons. */
+export const employeePhoneOf = (employeeId: string) =>
+  extendedEmployees.find((e) => e.employee.id === employeeId)?.phone;
+
+export const employeeByName = (name: string) => employees.find((e) => e.name === name);
 
 export const submissionsOf = (employeeId: string) => {
   const ids = new Set(
