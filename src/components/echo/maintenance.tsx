@@ -44,7 +44,13 @@ const maintenanceTone: Record<string, string> = {
 function MaintenanceRow({ m }: { m: MaintenanceRecord }) {
   return (
     <div className="grid gap-2 border-b border-border py-5 md:grid-cols-[56px_1.2fr_1fr_200px] lg:grid-cols-[56px_1.2fr_1fr_140px_130px_110px_120px_110px] md:items-center md:gap-6">
-      <span className="hidden text-xs tabular-nums text-muted-foreground md:block">{m.code}</span>
+      <Link
+        to="/maintenance/$code"
+        params={{ code: m.code }}
+        className="hidden text-xs tabular-nums text-muted-foreground transition-opacity duration-500 hover:opacity-60 md:block"
+      >
+        {m.code}
+      </Link>
       <Link
         to="/clients/$clientName"
         params={{ clientName: m.client }}
@@ -124,6 +130,117 @@ export function MaintenanceChartPage() {
           <MaintenanceRow key={m.code} m={m} />
         ))}
       </div>
+    </AppShell>
+  );
+}
+
+/* ---------------- Maintenance record details ---------------- */
+
+export function MaintenanceRecordPage({ code }: { code: string }) {
+  const record = maintenanceRecords.find((m) => m.code === code);
+  if (!record) {
+    return (
+      <AppShell>
+        <PageHeader
+          title="Maintenance Record"
+          eyebrow="Maintenance"
+          back={{ to: "/maintenance", label: "Maintenance Chart" }}
+        />
+        <p className="py-16 text-sm text-muted-foreground">
+          Record not found for code <span className="text-foreground">{code}</span>.
+        </p>
+      </AppShell>
+    );
+  }
+  return (
+    <AppShell>
+      <PageHeader
+        title={record.what}
+        eyebrow={`${record.code} · Maintenance`}
+        back={{ to: "/maintenance", label: "Maintenance Chart" }}
+      />
+
+      <div className="mb-12 flex flex-wrap items-end justify-between gap-6 border-b border-border pb-6">
+        <div>
+          <Eyebrow className="mb-3">Current Status</Eyebrow>
+          <p className="glyph-serif text-4xl text-foreground md:text-5xl">{record.status}</p>
+        </div>
+        <div className="flex items-center gap-6 text-sm">
+          <span className="text-[15px] text-foreground">
+            ₹{record.cost.toLocaleString("en-IN")}
+          </span>
+          <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+            {record.date} · {record.time}
+          </span>
+        </div>
+      </div>
+
+      <SectionBlock eyebrow="Record" title="Maintenance reference">
+        <div className="grid gap-x-16 gap-y-6 lg:grid-cols-[1fr_1fr]">
+          {(
+            [
+              ["Record Code", record.code],
+              ["Client", record.client],
+              ["Site", record.site],
+              ["Assigned To", record.employee],
+            ] as Array<[string, string]>
+          ).map(([k, v]) => (
+            <div key={k} className="hairline-b flex items-center justify-between gap-6 py-4">
+              <span className="text-sm text-muted-foreground">{k}</span>
+              {k === "Client" ? (
+                <Link
+                  to="/clients/$clientName"
+                  params={{ clientName: record.client }}
+                  className="text-[15px] text-foreground transition-opacity duration-500 hover:opacity-60"
+                >
+                  {v}
+                </Link>
+              ) : (
+                <span className="text-[15px] text-foreground">{v}</span>
+              )}
+            </div>
+          ))}
+        </div>
+      </SectionBlock>
+
+      <SectionBlock eyebrow="Work" title="What was done">
+        <div className="grid gap-x-16 gap-y-6 lg:grid-cols-[1fr_1fr]">
+          <div>
+            <p className="eyebrow mb-3">Description</p>
+            <p className="text-[15px] leading-relaxed text-foreground">{record.description}</p>
+          </div>
+          <div>
+            <p className="eyebrow mb-3">Notes</p>
+            <p className="text-[15px] leading-relaxed text-foreground">{record.notes}</p>
+          </div>
+        </div>
+        {record.schedule && (
+          <p className="mt-6 text-sm text-muted-foreground">Schedule · {record.schedule}</p>
+        )}
+      </SectionBlock>
+
+      {(record.before || record.after) && (
+        <SectionBlock eyebrow="Evidence" title="Site photographs">
+          <div className="grid gap-6 sm:grid-cols-2">
+            {(
+              [
+                ["Before", record.before],
+                ["After", record.after],
+              ] as Array<[string, string | undefined]>
+            )
+              .filter(([, file]) => Boolean(file))
+              .map(([label, file]) => (
+                <div key={label} className="border border-border p-6">
+                  <p className="eyebrow mb-3">{label}</p>
+                  <p className="flex items-center gap-3 text-sm text-foreground">
+                    <ImageIcon className="size-4 text-muted-foreground" />
+                    {file}
+                  </p>
+                </div>
+              ))}
+          </div>
+        </SectionBlock>
+      )}
     </AppShell>
   );
 }

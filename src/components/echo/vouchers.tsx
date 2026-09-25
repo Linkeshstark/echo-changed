@@ -268,6 +268,7 @@ export function VouchersTab({ employeeId }: { employeeId: string }) {
               <Link
                 to="/monitor/$employeeId/vouchers/$voucherCode"
                 params={{ employeeId, voucherCode: v.code }}
+                search={{ tab: undefined, task: undefined }}
               >
                 View
               </Link>

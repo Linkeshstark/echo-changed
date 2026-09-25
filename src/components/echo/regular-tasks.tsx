@@ -146,6 +146,7 @@ function TaskRow({
           <Link
             to="/monitor/$employeeId/regular-tasks/$taskId"
             params={{ employeeId, taskId: task.id }}
+            search={{ tab: undefined, task: undefined }}
           >
             <Eye className="size-4" /> View Details
           </Link>

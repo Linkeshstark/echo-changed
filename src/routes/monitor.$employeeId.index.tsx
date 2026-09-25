@@ -6,5 +6,6 @@ export const Route = createFileRoute("/monitor/$employeeId/")({
 });
 function Page() {
   const { employeeId } = Route.useParams();
-  return <MonitorEmployeePage employeeId={employeeId} />;
+  const { tab, task } = Route.useSearch();
+  return <MonitorEmployeePage employeeId={employeeId} tab={tab} task={task} />;
 }

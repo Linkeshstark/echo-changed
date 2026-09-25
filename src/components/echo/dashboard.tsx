@@ -1,14 +1,23 @@
+<<<<<<< HEAD
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Check } from "lucide-react";
+=======
+import { useState } from "react";
+import { Check } from "lucide-react";
+>>>>>>> 1c53d49 (Replace Move work forward list with ECHO logo app launcher)
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { cn } from "@/lib/utils";
 import { AppShell } from "./app-shell";
 import { Eyebrow, KpiBand, Modal, TextField } from "./primitives";
 import { Button } from "@/components/ui/button";
+<<<<<<< HEAD
 import { initialTasks, quickActions } from "@/lib/echo-data";
 import { donationTotals, useDonations } from "@/lib/echo-donations";
 import { useGreeting } from "@/lib/echo-session";
+=======
+import { initialTasks } from "@/lib/echo-data";
+>>>>>>> 1c53d49 (Replace Move work forward list with ECHO logo app launcher)
 
 const chartData = [
   { m: "Apr", value: 74 },
@@ -257,36 +266,7 @@ export function Dashboard() {
         </div>
       </section>
 
-      {/* Quick actions — full-width hairlined rows */}
-      <section data-reveal className="mt-20">
-        <div className="mb-8 border-b border-border pb-5">
-          <h2 className="glyph-serif text-3xl text-foreground md:text-4xl">Move work forward</h2>
-        </div>
-        <div>
-          {quickActions.map((item, i) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className="group flex items-center justify-between border-b border-border py-6 transition-opacity duration-500 hover:opacity-60"
-            >
-              <span className="flex items-baseline gap-6">
-                <span className="w-8 text-xs tabular-nums text-muted-foreground">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <span>
-                  <span className="block text-[15px] text-foreground md:text-base">
-                    {item.title}
-                  </span>
-                  <span className="mt-1 block text-xs text-muted-foreground md:text-sm">
-                    {item.detail}
-                  </span>
-                </span>
-              </span>
-              <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform duration-500 ease-luxury group-hover:translate-x-1" />
-            </Link>
-          ))}
-        </div>
-      </section>
+      {/* Quick actions removed - now accessible via ECHO logo app launcher */}
 
       <Modal open={open} onClose={() => setOpen(false)} title="New Task" eyebrow="Operations" wide>
         <TextField

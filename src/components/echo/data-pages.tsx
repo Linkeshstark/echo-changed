@@ -510,7 +510,11 @@ export function EmployeeProfilePage({ employeeId }: { employeeId: string }) {
             })()}
             <div className="pt-8">
               <Button asChild variant="secondary">
-                <Link to="/monitor/$employeeId" params={{ employeeId: employee.id }}>
+                <Link
+                  to="/monitor/$employeeId"
+                  params={{ employeeId: employee.id }}
+                  search={{ tab: undefined, task: undefined }}
+                >
                   Open full attendance calendar
                 </Link>
               </Button>
@@ -557,7 +561,11 @@ export function EmployeeProfilePage({ employeeId }: { employeeId: string }) {
             </div>
             <div className="pt-8">
               <Button asChild variant="secondary">
-                <Link to="/payroll/$employeeId" params={{ employeeId: employee.id }}>
+                <Link
+                  to="/payroll/$employeeId"
+                  params={{ employeeId: employee.id }}
+                  search={{ month: undefined }}
+                >
                   Open Payroll
                 </Link>
               </Button>
