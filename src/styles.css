@@ -303,6 +303,44 @@
   .input-underline:hover {
     border-bottom-color: color-mix(in oklab, var(--foreground) 30%, var(--border));
   }
+
+  /* Operations queue — fixed-height scroll area with a thin, self-hiding scrollbar. */
+  .echo-queue-scroll {
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+  .echo-queue-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+  .echo-queue-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .echo-queue-scroll::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 9999px;
+    transition: background-color 0.6s var(--ease-luxury);
+  }
+  .echo-queue-scroll:hover::-webkit-scrollbar-thumb,
+  .echo-queue-scroll:focus-within::-webkit-scrollbar-thumb {
+    background-color: color-mix(in oklab, var(--foreground) 22%, transparent);
+  }
+  .echo-queue-scroll::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in oklab, var(--foreground) 38%, transparent);
+  }
+  /* Firefox has no webkit pseudo-elements — use the standard properties there. */
+  @supports not selector(::-webkit-scrollbar) {
+    .echo-queue-scroll {
+      scrollbar-width: thin;
+      scrollbar-color: transparent transparent;
+    }
+    .echo-queue-scroll:hover,
+    .echo-queue-scroll:focus-within {
+      scrollbar-color: color-mix(in oklab, var(--foreground) 22%, transparent) transparent;
+    }
+  }
 }
 
 @keyframes echo-fade {

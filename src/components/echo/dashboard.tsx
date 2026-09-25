@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Check } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -11,13 +11,17 @@ import { donationTotals, useDonations } from "@/lib/echo-donations";
 import { useGreeting } from "@/lib/echo-session";
 
 const chartData = [
-  { m: "Apr", value: 68 },
-  { m: "May", value: 75 },
-  { m: "Jun", value: 72 },
-  { m: "Jul", value: 86 },
+  { m: "Apr", value: 74 },
+  { m: "May", value: 81 },
+  { m: "Jun", value: 79 },
+  { m: "Jul", value: 88 },
   { m: "Aug", value: 91 },
   { m: "Sep", value: 96 },
 ];
+
+/* The queue height is measured against the rendered rows, so it has to run
+   before paint on the client and never during the server render. */
+const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 export function Dashboard() {
   const [tasks, setTasks] = useState(initialTasks);
@@ -25,6 +29,30 @@ export function Dashboard() {
   const [name, setName] = useState("");
   const { greeting } = useGreeting();
   const donations = useDonations();
+
+  /* Operations queue: the first four tasks keep the section's current height;
+     anything beyond that scrolls inside the queue instead of pushing the page down. */
+  const queueRef = useRef<HTMLDivElement>(null);
+  const [queueMaxHeight, setQueueMaxHeight] = useState<number | null>(null);
+
+  useIsoLayoutEffect(() => {
+    const el = queueRef.current;
+    if (!el) return;
+    if (tasks.length <= 4) {
+      setQueueMaxHeight(null);
+      return;
+    }
+    const applied = el.style.maxHeight;
+    el.style.maxHeight = "none";
+    el.scrollTop = 0;
+    const rows = el.querySelectorAll<HTMLElement>("[data-queue-row]");
+    const lastVisible = rows[3];
+    const height = lastVisible
+      ? lastVisible.getBoundingClientRect().bottom - el.getBoundingClientRect().top
+      : el.scrollHeight;
+    el.style.maxHeight = applied;
+    setQueueMaxHeight(Math.ceil(height));
+  }, [tasks.length]);
 
   const add = () => {
     if (!name.trim()) return;
@@ -130,63 +158,72 @@ export function Dashboard() {
           </Button>
         </div>
 
-        <div className="hidden grid-cols-[48px_1fr_140px] gap-6 border-b border-border py-3 lg:grid">
-          <span className="eyebrow">Index</span>
-          <span className="eyebrow">Task</span>
-          <span className="eyebrow text-right">Status</span>
-        </div>
+        <div
+          ref={queueRef}
+          className="echo-queue-scroll"
+          style={queueMaxHeight === null ? undefined : { maxHeight: `${queueMaxHeight}px` }}
+        >
+          <div className="sticky top-0 z-10 hidden grid-cols-[48px_1fr_140px] gap-6 border-b border-border bg-background py-3 lg:grid">
+            <span className="eyebrow">Index</span>
+            <span className="eyebrow">Task</span>
+            <span className="eyebrow text-right">Status</span>
+          </div>
 
-        <div>
-          {tasks.map((task, i) => (
-            <div
-              key={task.id}
-              onClick={() =>
-                setTasks(tasks.map((t) => (t.id === task.id ? { ...t, done: !t.done } : t)))
-              }
-              className="grid cursor-pointer grid-cols-[auto_1fr] items-center gap-6 border-b border-border py-5 transition-opacity duration-500 hover:opacity-70 lg:grid-cols-[48px_1fr_140px]"
-            >
-              <span className="hidden text-xs tabular-nums text-muted-foreground lg:block">
-                {String(i + 1).padStart(4, "0")}
-              </span>
-              <span className="flex items-center gap-4">
-                <span
-                  className={
-                    "grid size-5 shrink-0 place-items-center border transition-all duration-500 " +
-                    (task.done
-                      ? "border-accent bg-accent text-accent-foreground"
-                      : "border-muted-foreground/40 text-transparent")
-                  }
-                >
-                  <Check
-                    className={cn(
-                      task.done ? "scale-100" : "scale-0",
-                      "size-3 transition-all duration-500",
-                    )}
-                  />
-                </span>
-                <span
-                  className={
-                    task.done ? "text-muted-foreground line-through" : "text-[15px] text-foreground"
-                  }
-                >
-                  {task.title}
-                </span>
-              </span>
-              <span
-                className={cn(
-                  "justify-self-end text-xs uppercase tracking-[0.16em] lg:text-right",
-                  task.done ? "text-muted-foreground/70" : "text-foreground",
-                )}
+          <div>
+            {tasks.map((task, i) => (
+              <div
+                key={task.id}
+                data-queue-row
+                onClick={() =>
+                  setTasks(tasks.map((t) => (t.id === task.id ? { ...t, done: !t.done } : t)))
+                }
+                className="grid cursor-pointer grid-cols-[auto_1fr] items-center gap-6 border-b border-border py-5 transition-opacity duration-500 hover:opacity-70 lg:grid-cols-[48px_1fr_140px]"
               >
-                {task.done ? "Complete" : "Queued"}
-              </span>
-            </div>
-          ))}
-          {tasks.length === 0 && (
-            <p className="py-16 text-center text-sm text-muted-foreground">
-              Nothing here. The queue is clear.
-            </p>
-          )}
+                <span className="hidden text-xs tabular-nums text-muted-foreground lg:block">
+                  {String(i + 1).padStart(4, "0")}
+                </span>
+                <span className="flex items-center gap-4">
+                  <span
+                    className={
+                      "grid size-5 shrink-0 place-items-center border transition-all duration-500 " +
+                      (task.done
+                        ? "border-accent bg-accent text-accent-foreground"
+                        : "border-muted-foreground/40 text-transparent")
+                    }
+                  >
+                    <Check
+                      className={cn(
+                        task.done ? "scale-100" : "scale-0",
+                        "size-3 transition-all duration-500",
+                      )}
+                    />
+                  </span>
+                  <span
+                    className={
+                      task.done
+                        ? "text-muted-foreground line-through"
+                        : "text-[15px] text-foreground"
+                    }
+                  >
+                    {task.title}
+                  </span>
+                </span>
+                <span
+                  className={cn(
+                    "justify-self-end text-xs uppercase tracking-[0.16em] lg:text-right",
+                    task.done ? "text-muted-foreground/70" : "text-foreground",
+                  )}
+                >
+                  {task.done ? "Complete" : "Queued"}
+                </span>
+              </div>
+            ))}
+            {tasks.length === 0 && (
+              <p className="py-16 text-center text-sm text-muted-foreground">
+                Nothing here. The queue is clear.
+              </p>
+            )}
+          </div>
         </div>
       </section>
 
