@@ -8,7 +8,7 @@ import {
   type TextareaHTMLAttributes,
 } from "react";
 import { Link } from "@tanstack/react-router";
-import { Check, ChevronDown, ChevronLeft, Moon, Sun } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, Moon, Sun, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -182,8 +182,35 @@ export function TextField({
   label,
   className,
   required,
+  validate,
+  value,
+  defaultValue,
+  onChange,
+  onBlur,
   ...props
-}: InputHTMLAttributes<HTMLInputElement> & { label: string }) {
+}: InputHTMLAttributes<HTMLInputElement> & {
+  label: string;
+  validate?: (value: string) => boolean;
+}) {
+  const [tick, setTick] = useState<boolean | null>(null);
+
+  const check = (v: string) => {
+    if (!validate) return;
+    const clean = v.trim();
+    setTick(clean === "" ? null : validate(clean));
+  };
+
+  /* Pre-filled and controlled fields are judged as their value changes, not
+     only when this input is edited — the account pair depends on its sibling. */
+  useEffect(() => {
+    if (!validate) return;
+    const current =
+      value !== undefined ? String(value) : typeof defaultValue === "string" ? defaultValue : null;
+    if (current === null) return;
+    const clean = current.trim();
+    setTick(clean === "" ? null : validate(clean));
+  }, [validate, value, defaultValue]);
+
   return (
     <label
       className={cn(
@@ -193,14 +220,36 @@ export function TextField({
     >
       <input
         {...props}
+        value={value}
+        defaultValue={defaultValue}
+        onChange={(e) => {
+          check(e.target.value);
+          onChange?.(e);
+        }}
+        onBlur={(e) => {
+          check(e.target.value);
+          onBlur?.(e);
+        }}
         required={required}
         placeholder=" "
-        className="peer w-full bg-transparent pb-2.5 pt-7 text-[15px] text-foreground outline-none transition-colors duration-500 placeholder:text-transparent"
+        className={cn(
+          "peer w-full bg-transparent pb-2.5 pt-7 text-[15px] text-foreground outline-none transition-colors duration-500 placeholder:text-transparent",
+          validate && "pr-6",
+        )}
       />
       <span className={floatingLabel}>
         {label}
         {required && <span className="ml-1 text-foreground/40">*</span>}
       </span>
+      {tick !== null && (
+        <span className="pointer-events-none absolute right-0 top-1">
+          {tick ? (
+            <Check className="size-3.5 text-success" />
+          ) : (
+            <X className="size-3.5 text-destructive" />
+          )}
+        </span>
+      )}
       <span className="field-line" />
     </label>
   );

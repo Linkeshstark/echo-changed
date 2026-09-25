@@ -20,6 +20,15 @@ import {
   nextActivityTicket,
   type ActivityPriority,
 } from "@/lib/echo-ops-data";
+import {
+  accountMatches,
+  isAadhaar,
+  isEmail,
+  isGstin,
+  isIfsc,
+  isMobile,
+  isPan,
+} from "@/lib/validation";
 import { ActivityPriorityPill } from "./raised-activity";
 import {
   newTaskSchedule,
@@ -221,8 +230,9 @@ export function NewEmployeePage() {
           maxLength={12}
           required
           data-save
+          validate={isAadhaar}
         />
-        <TextField label="PAN" name="pan" maxLength={10} required data-save />
+        <TextField label="PAN" name="pan" maxLength={10} required data-save validate={isPan} />
         <TextField
           label="Phone number"
           name="phone"
@@ -230,6 +240,7 @@ export function NewEmployeePage() {
           maxLength={15}
           required
           data-save
+          validate={isMobile}
         />
       </Section>
 
@@ -241,19 +252,15 @@ export function NewEmployeePage() {
           onChange={(e) => setAccount(e.target.value.replace(/\D/g, "").slice(0, 18))}
           required
         />
-        <div className="relative">
-          <TextField
-            label="Confirm account number"
-            name="confirm"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value.replace(/\D/g, "").slice(0, 18))}
-            required
-          />
-          <span className="absolute right-0 top-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-            {confirm ? (confirm === account ? "Match" : "Mismatch") : ""}
-          </span>
-        </div>
-        <TextField label="IFSC" name="ifsc" maxLength={11} required data-save />
+        <TextField
+          label="Confirm account number"
+          name="confirm"
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value.replace(/\D/g, "").slice(0, 18))}
+          required
+          validate={(v) => accountMatches(account, v)}
+        />
+        <TextField label="IFSC" name="ifsc" maxLength={11} required data-save validate={isIfsc} />
         <TextField label="Account name" name="acctname" maxLength={100} required data-save />
       </Section>
 
@@ -406,9 +413,16 @@ export function NewClientPage() {
       <Section index={1} title="Client details">
         <TextField label="Name" name="name" required data-save />
         <TextField label="Company" name="company" required data-save />
-        <TextField label="Phone" name="phone" inputMode="tel" required data-save />
-        <TextField label="Email" name="email" type="email" required data-save />
-        <TextField label="GSTIN" name="gstin" maxLength={15} data-save />
+        <TextField
+          label="Phone"
+          name="phone"
+          inputMode="tel"
+          required
+          data-save
+          validate={isMobile}
+        />
+        <TextField label="Email" name="email" type="email" required data-save validate={isEmail} />
+        <TextField label="GSTIN" name="gstin" maxLength={15} data-save validate={isGstin} />
         <AreaField label="GST address" name="gstaddr" data-save />
       </Section>
 

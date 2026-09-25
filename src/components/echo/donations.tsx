@@ -15,6 +15,7 @@ import {
   type DonationPurpose,
   type DonationRecord,
 } from "@/lib/echo-donations";
+import { isEmail, isMobile } from "@/lib/validation";
 import { cn } from "@/lib/utils";
 
 /* ---------------- Donation dashboard ---------------- */
@@ -279,8 +280,20 @@ function NewDonationModal({ open, onClose }: { open: boolean; onClose: () => voi
     >
       <div className="grid gap-9">
         <TextField label="Donor name" name="donationDonor" required maxLength={80} />
-        <TextField label="Email" name="donationEmail" type="email" maxLength={120} />
-        <TextField label="Phone" name="donationPhone" type="tel" maxLength={20} />
+        <TextField
+          label="Email"
+          name="donationEmail"
+          type="email"
+          maxLength={120}
+          validate={isEmail}
+        />
+        <TextField
+          label="Phone"
+          name="donationPhone"
+          type="tel"
+          maxLength={20}
+          validate={isMobile}
+        />
         <TextField label="Donation amount" name="donationAmount" type="number" min="1" required />
         <SelectField
           label="Purpose"

@@ -46,6 +46,7 @@ import {
 import { cn } from "@/lib/utils";
 import { signOutSession } from "@/lib/echo-session";
 import { clientProfiles } from "@/lib/echo-ops-data";
+import { isEmail, isMobile } from "@/lib/validation";
 import { CallButton } from "./call-button";
 
 /* ---------------- Update Salary (advances + deductions) ---------------- */
@@ -980,8 +981,13 @@ export function SettingsPage() {
           <section data-reveal className="hairline-t py-10 first:border-t-0">
             <div className="grid gap-x-16 gap-y-9 md:grid-cols-2">
               <TextField label="Name" defaultValue="Linkesh Kumar" />
-              <TextField label="Email" type="email" defaultValue="linkesh@echo.in" />
-              <TextField label="Phone" defaultValue="+91 98765 43210" />
+              <TextField
+                label="Email"
+                type="email"
+                defaultValue="linkesh@echo.in"
+                validate={isEmail}
+              />
+              <TextField label="Phone" defaultValue="+91 98765 43210" validate={isMobile} />
               <TextField label="New password" type="password" />
             </div>
           </section>

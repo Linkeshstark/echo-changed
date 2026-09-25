@@ -4,6 +4,7 @@ import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import { Brand, TextField } from "./primitives";
 import { Button } from "@/components/ui/button";
 import { DEFAULT_OPERATOR_NAME, storeOperatorName } from "@/lib/echo-session";
+import { isEmail, isMobile } from "@/lib/validation";
 import blue from "@/assets/echo-glass-blue.jpg";
 import titanium from "@/assets/echo-titanium.jpg";
 import orbit from "@/assets/echo-orbit.jpg";
@@ -84,6 +85,7 @@ export function AuthPage() {
               autoComplete="tel"
               required
               maxLength={15}
+              validate={isMobile}
             />
           )}
           <TextField
@@ -92,6 +94,7 @@ export function AuthPage() {
             autoComplete="email"
             required
             maxLength={255}
+            validate={isEmail}
           />
           <div className="relative">
             <TextField
